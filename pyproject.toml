@@ -1,0 +1,45 @@
+[project]
+name = "agentaudit-workspace"
+version = "0.1.0"
+description = "Log, classify and audit every AI agent action for GDPR/AI Act/SOC2 compliance"
+requires-python = ">=3.12"
+dependencies = [
+    "agentaudit-api",
+    "agentaudit",
+    "agentaudit-hook",
+    "agentaudit-mcp",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+agentaudit-api = { workspace = true }
+agentaudit = { workspace = true }
+agentaudit-hook = { workspace = true }
+agentaudit-mcp = { workspace = true }
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+ignore = ["B008"]  # FastAPI Depends() in function defaults is standard pattern
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "agentaudit-api",
+    "agentaudit",
+    "agentaudit-hook",
+    "agentaudit-mcp",
+    "httpx>=0.28.1",
+    "langchain-core>=0.3.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.15.5",
+    "testcontainers>=4.14.1",
+]

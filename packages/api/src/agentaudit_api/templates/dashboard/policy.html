@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Policy — AgentAudit{% endblock %}
+{% block content %}
+<h2 style="margin-bottom: 1rem;">Organization Policy</h2>
+
+<div id="policy-flash"></div>
+
+<div class="card">
+    <form hx-put="/dashboard/policy" hx-target="#policy-flash" hx-swap="innerHTML">
+        <div class="form-group">
+            <label>Logging Level</label>
+            <select name="logging_level">
+                <option value="minimal" {% if policy.logging_level == 'minimal' %}selected{% endif %}>Minimal — only PII events</option>
+                <option value="standard" {% if policy.logging_level == 'standard' %}selected{% endif %}>Standard — medium+ risk or PII</option>
+                <option value="full" {% if policy.logging_level == 'full' %}selected{% endif %}>Full — all events</option>
+                <option value="paranoid" {% if policy.logging_level == 'paranoid' %}selected{% endif %}>Paranoid — all events + blocking</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Compliance Frameworks</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="fw_gdpr" {% if policy.frameworks.gdpr %}checked{% endif %}> GDPR</label>
+                <label><input type="checkbox" name="fw_ai_act" {% if policy.frameworks.ai_act %}checked{% endif %}> AI Act</label>
+                <label><input type="checkbox" name="fw_soc2" {% if policy.frameworks.soc2 %}checked{% endif %}> SOC 2</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Blocking Rules</label>
+            <div class="checkbox-group" style="margin-bottom: 0.5rem;">
+                <label><input type="checkbox" name="blocking_enabled" {% if policy.blocking_rules.enabled %}checked{% endif %}> Enable blocking</label>
+            </div>
+            <label style="font-size:0.8125rem;color:var(--text-muted);">Block on risk level ≥</label>
+            <select name="block_on">
+                <option value="medium" {% if policy.blocking_rules.block_on == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="high" {% if policy.blocking_rules.block_on == 'high' %}selected{% endif %}>High</option>
+                <option value="critical" {% if policy.blocking_rules.block_on == 'critical' %}selected{% endif %}>Critical</option>
+            </select>
+        </div>
+
+        <button type="submit">Save Policy</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">Current Policy (JSON)</div>
+    <div class="json-block">{{ policy_json }}</div>
+</div>
+{% endblock %}

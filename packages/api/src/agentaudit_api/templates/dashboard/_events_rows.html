@@ -1,0 +1,43 @@
+<table>
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Agent</th>
+            <th>Action</th>
+            <th>Risk</th>
+            <th>PII</th>
+            <th>Decision</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+        <tr onclick="window.location='/dashboard/events/{{ event.id }}'">
+            <td class="text-muted">{{ event.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ event.agent_id }}</td>
+            <td>{{ event.action }}</td>
+            <td><span class="badge badge-{{ event.risk_level or 'low' }}">{{ event.risk_level or 'low' }}</span></td>
+            <td>{% if event.pii_detected %}<span class="badge badge-pii">PII</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>{% if event.decision == 'block' %}<span class="badge badge-critical">blocked</span>{% else %}<span class="text-muted">allow</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% if not events %}
+        <tr><td colspan="6" class="text-muted" style="text-align:center;padding:2rem;">No events found</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% if has_more %}
+<div style="text-align:center;margin-top:1rem;">
+    <button class="btn-secondary"
+        hx-get="/dashboard?offset={{ next_offset }}{% for k,v in filters.items() %}&{{ k }}={{ v }}{% endfor %}"
+        hx-target="#events-table"
+        hx-swap="innerHTML">
+        Load more
+        <span class="htmx-indicator spinner">loading...</span>
+    </button>
+</div>
+{% endif %}
+
+<p class="text-muted" style="margin-top:0.5rem;font-size:0.75rem;">
+    Showing {{ events|length }} of {{ total }} events
+</p>

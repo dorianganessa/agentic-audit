@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Timeline — AgentAudit{% endblock %}
+{% block content %}
+<h2 style="margin-bottom: 1rem;">Event Timeline</h2>
+
+<form class="filters" hx-get="/dashboard" hx-target="#events-table" hx-swap="innerHTML" hx-push-url="true">
+    <div class="filter-group">
+        <label>Risk Level</label>
+        <select name="risk_level">
+            <option value="">All</option>
+            <option value="low" {% if filters.risk_level == 'low' %}selected{% endif %}>Low</option>
+            <option value="medium" {% if filters.risk_level == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="high" {% if filters.risk_level == 'high' %}selected{% endif %}>High</option>
+            <option value="critical" {% if filters.risk_level == 'critical' %}selected{% endif %}>Critical</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Agent ID</label>
+        <input type="text" name="agent_id" value="{{ filters.agent_id or '' }}" placeholder="e.g. claude-code">
+    </div>
+    <div class="filter-group">
+        <label>Action</label>
+        <input type="text" name="action" value="{{ filters.action or '' }}" placeholder="e.g. shell_command">
+    </div>
+    <div class="filter-group">
+        <label>PII</label>
+        <select name="pii_detected">
+            <option value="">All</option>
+            <option value="true" {% if filters.pii_detected == 'true' %}selected{% endif %}>Yes</option>
+            <option value="false" {% if filters.pii_detected == 'false' %}selected{% endif %}>No</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>After</label>
+        <input type="datetime-local" name="after" value="{{ filters.after or '' }}">
+    </div>
+    <div class="filter-group">
+        <label>Before</label>
+        <input type="datetime-local" name="before" value="{{ filters.before or '' }}">
+    </div>
+    <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit">Filter</button>
+    </div>
+</form>
+
+<div id="events-table">
+{% include "dashboard/_events_rows.html" %}
+</div>
+{% endblock %}

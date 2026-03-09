@@ -1,0 +1,123 @@
+"""Map Claude Code hook JSON to AuditEvent fields."""
+
+from __future__ import annotations
+
+
+def map_tool_event(hook_data: dict) -> dict:
+    """Transform Claude Code hook JSON into AuditEvent create payload.
+
+    Returns a dict with keys: agent_id, action, data, context, reasoning.
+    """
+    tool_name = hook_data.get("tool_name", "")
+    tool_input = hook_data.get("tool_input", {})
+    tool_output = hook_data.get("tool_output")
+    session_id = hook_data.get("session_id")
+    hook_event_name = hook_data.get("hook_event_name", "")
+
+    action, data = _map_action_data(tool_name, tool_input)
+
+    if tool_output is not None:
+        data["tool_output"] = _truncate(tool_output, max_len=4000)
+
+    context: dict = {"tool": "claude_code"}
+    if session_id:
+        context["session_id"] = session_id
+    if hook_event_name:
+        context["hook_event"] = hook_event_name
+
+    return {
+        "agent_id": "claude-code",
+        "action": action,
+        "data": data,
+        "context": context,
+    }
+
+
+def map_session_event(hook_data: dict) -> dict:
+    """Transform a session start/end hook JSON into AuditEvent create payload."""
+    hook_event_name = hook_data.get("hook_event_name", "")
+    session_id = hook_data.get("session_id")
+
+    action = "session_start" if "Start" in hook_event_name else "session_end"
+
+    context: dict = {"tool": "claude_code"}
+    if session_id:
+        context["session_id"] = session_id
+
+    return {
+        "agent_id": "claude-code",
+        "action": action,
+        "data": {},
+        "context": context,
+    }
+
+
+def _map_action_data(tool_name: str, tool_input: dict) -> tuple[str, dict]:
+    """Map tool_name to action string and extract relevant data."""
+    if tool_name == "Bash":
+        return "shell_command", {
+            "command": tool_input.get("command", ""),
+            "working_dir": tool_input.get("working_dir"),
+            "exit_code": tool_input.get("exit_code"),
+        }
+
+    if tool_name == "Write":
+        return "file_write", {
+            "file_path": tool_input.get("file_path", ""),
+        }
+
+    if tool_name in ("Edit", "MultiEdit"):
+        return "file_edit", {
+            "file_path": tool_input.get("file_path", ""),
+        }
+
+    if tool_name == "Read":
+        return "file_read", {
+            "file_path": tool_input.get("file_path", ""),
+        }
+
+    if tool_name == "WebFetch":
+        return "web_fetch", {
+            "url": tool_input.get("url", ""),
+        }
+
+    if tool_name == "WebSearch":
+        return "web_search", {
+            "query": tool_input.get("query", ""),
+        }
+
+    if tool_name == "Task":
+        return "sub_agent_spawn", {
+            "task": tool_input.get("task_description", ""),
+        }
+
+    # MCP connector pattern: mcp__<connector>__<action>
+    if tool_name.startswith("mcp__"):
+        return _map_mcp_tool(tool_name, tool_input)
+
+    # Fallback: lowercase tool name
+    return tool_name.lower(), {"tool_input": tool_input}
+
+
+def _map_mcp_tool(tool_name: str, tool_input: dict) -> tuple[str, dict]:
+    """Map MCP connector tool calls to AgentAudit actions."""
+    parts = tool_name.split("__")
+    if len(parts) >= 3:
+        connector = parts[1]
+        operation = parts[2]
+        return (
+            "connector_access",
+            {
+                "connector": connector,
+                "operation": operation,
+                **tool_input,
+            },
+        )
+    return "mcp_tool_call", {"tool_name": tool_name, "tool_input": tool_input}
+
+
+def _truncate(value: object, max_len: int) -> object:
+    """Truncate string values to max_len."""
+    if isinstance(value, str) and len(value) > max_len:
+        return value[:max_len] + "... [truncated]"
+    return value

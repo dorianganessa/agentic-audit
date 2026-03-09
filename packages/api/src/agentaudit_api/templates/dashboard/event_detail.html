@@ -1,0 +1,82 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Event {{ event.id[:8] }}… — AgentAudit{% endblock %}
+{% block content %}
+<p style="margin-bottom:1rem;"><a href="/dashboard">&larr; Back to timeline</a></p>
+
+<div class="card">
+    <div class="card-header">Event Details</div>
+    <div class="detail-grid">
+        <div class="detail-label">ID</div>
+        <div>{{ event.id }}</div>
+
+        <div class="detail-label">Timestamp</div>
+        <div>{{ event.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+
+        <div class="detail-label">Agent</div>
+        <div>{{ event.agent_id }}</div>
+
+        <div class="detail-label">Action</div>
+        <div>{{ event.action }}</div>
+
+        <div class="detail-label">Risk Level</div>
+        <div>
+            <span class="badge badge-{{ event.risk_level or 'low' }}">{{ event.risk_level or 'low' }}</span>
+            {% if risk_explanation %}
+            <span class="text-muted" style="margin-left:0.5rem;font-size:0.8125rem;">{{ risk_explanation }}</span>
+            {% endif %}
+        </div>
+
+        <div class="detail-label">Decision</div>
+        <div>
+            {% if event.decision == 'block' %}
+            <span class="badge badge-critical">blocked</span>
+            {% if event.reason %}<span class="text-muted" style="margin-left:0.5rem;font-size:0.8125rem;">{{ event.reason }}</span>{% endif %}
+            {% else %}
+            <span class="text-muted">allow</span>
+            {% endif %}
+        </div>
+
+        <div class="detail-label">PII Detected</div>
+        <div>
+            {% if event.pii_detected %}
+            <span class="badge badge-pii">PII</span>
+            {% for field in event.pii_fields %}
+            <span class="badge badge-pii" style="margin-left:0.25rem;">{{ field }}</span>
+            {% endfor %}
+            {% else %}
+            <span class="text-muted">No</span>
+            {% endif %}
+        </div>
+
+        <div class="detail-label">Reasoning</div>
+        <div>{{ event.reasoning or '—' }}</div>
+
+        <div class="detail-label">Stored</div>
+        <div>{{ 'Yes' if event.stored else 'No' }}</div>
+    </div>
+</div>
+
+{% if event.frameworks %}
+<div class="card">
+    <div class="card-header">Compliance Frameworks</div>
+    {% for framework, articles in event.frameworks.items() %}
+    <div style="margin-bottom:0.5rem;">
+        <strong style="text-transform:uppercase;font-size:0.8125rem;">{{ framework }}</strong>
+        {% for article in articles %}
+        <span class="badge badge-framework">{{ framework|upper }} {{ article|replace('_',' ')|title }}</span>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">Data</div>
+    <div class="json-block">{{ data_json }}</div>
+</div>
+
+<div class="card">
+    <div class="card-header">Context</div>
+    <div class="json-block">{{ context_json }}</div>
+</div>
+{% endblock %}
