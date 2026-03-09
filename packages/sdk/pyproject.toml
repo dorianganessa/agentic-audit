@@ -1,5 +1,5 @@
 [project]
-name = "agentaudit"
+name = "agent-audit"
 version = "0.1.0"
 description = "Python SDK for AgentAudit — open-source compliance monitoring for AI agents"
 readme = "README.md"

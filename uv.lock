@@ -3,15 +3,15 @@ requires-python = ">=3.12"
 
 [manifest]
 members = [
-    "agentaudit",
+    "agent-audit",
+    "agent-audit-hook",
+    "agent-audit-mcp",
     "agentaudit-api",
-    "agentaudit-hook",
-    "agentaudit-mcp",
     "agentaudit-workspace",
 ]
 
 [[package]]
-name = "agentaudit"
+name = "agent-audit"
 version = "0.1.0"
 source = { editable = "packages/sdk" }
 dependencies = [
@@ -27,6 +27,32 @@ langchain = [
 requires-dist = [
     { name = "httpx", specifier = ">=0.27,<1.0" },
     { name = "langchain-core", marker = "extra == 'langchain'", specifier = ">=0.3.0" },
+]
+
+[[package]]
+name = "agent-audit-hook"
+version = "0.1.0"
+source = { editable = "packages/hook-cli" }
+dependencies = [
+    { name = "agent-audit" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "agent-audit", editable = "packages/sdk" }]
+
+[[package]]
+name = "agent-audit-mcp"
+version = "0.1.0"
+source = { editable = "packages/mcp-server" }
+dependencies = [
+    { name = "agent-audit" },
+    { name = "mcp", extra = ["cli"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "agent-audit", editable = "packages/sdk" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.0" },
 ]
 
 [[package]]
@@ -61,48 +87,22 @@ requires-dist = [
 ]
 
 [[package]]
-name = "agentaudit-hook"
-version = "0.1.0"
-source = { editable = "packages/hook-cli" }
-dependencies = [
-    { name = "agentaudit" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "agentaudit", editable = "packages/sdk" }]
-
-[[package]]
-name = "agentaudit-mcp"
-version = "0.1.0"
-source = { editable = "packages/mcp-server" }
-dependencies = [
-    { name = "agentaudit" },
-    { name = "mcp", extra = ["cli"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "agentaudit", editable = "packages/sdk" },
-    { name = "mcp", extras = ["cli"], specifier = ">=1.0" },
-]
-
-[[package]]
 name = "agentaudit-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "agentaudit" },
+    { name = "agent-audit" },
+    { name = "agent-audit-hook" },
+    { name = "agent-audit-mcp" },
     { name = "agentaudit-api" },
-    { name = "agentaudit-hook" },
-    { name = "agentaudit-mcp" },
 ]
 
 [package.dev-dependencies]
 dev = [
-    { name = "agentaudit" },
+    { name = "agent-audit" },
+    { name = "agent-audit-hook" },
+    { name = "agent-audit-mcp" },
     { name = "agentaudit-api" },
-    { name = "agentaudit-hook" },
-    { name = "agentaudit-mcp" },
     { name = "coverage" },
     { name = "httpx" },
     { name = "langchain-core" },
@@ -118,18 +118,18 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agentaudit", editable = "packages/sdk" },
+    { name = "agent-audit", editable = "packages/sdk" },
+    { name = "agent-audit-hook", editable = "packages/hook-cli" },
+    { name = "agent-audit-mcp", editable = "packages/mcp-server" },
     { name = "agentaudit-api", editable = "packages/api" },
-    { name = "agentaudit-hook", editable = "packages/hook-cli" },
-    { name = "agentaudit-mcp", editable = "packages/mcp-server" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "agentaudit", editable = "packages/sdk" },
+    { name = "agent-audit", editable = "packages/sdk" },
+    { name = "agent-audit-hook", editable = "packages/hook-cli" },
+    { name = "agent-audit-mcp", editable = "packages/mcp-server" },
     { name = "agentaudit-api", editable = "packages/api" },
-    { name = "agentaudit-hook", editable = "packages/hook-cli" },
-    { name = "agentaudit-mcp", editable = "packages/mcp-server" },
     { name = "coverage", specifier = ">=7.6.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain-core", specifier = ">=0.3.0" },
