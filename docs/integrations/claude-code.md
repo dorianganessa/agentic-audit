@@ -5,7 +5,7 @@ AgentAudit integrates with Claude Code via deterministic hooks. Every tool call 
 ## Prerequisites
 
 - AgentAudit API running ([quickstart](../getting-started/quickstart.md))
-- `agentaudit-hook` CLI installed (`pip install agentaudit`)
+- `agentaudit-hook` CLI installed (`pip install agentic-audit`)
 - Environment variables set:
 
 ```bash

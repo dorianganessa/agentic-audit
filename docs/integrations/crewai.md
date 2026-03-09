@@ -5,7 +5,7 @@ AgentAudit integrates with CrewAI via event hooks, capturing every tool call and
 ## Installation
 
 ```bash
-pip install agentaudit
+pip install agentic-audit
 ```
 
 ## Setup

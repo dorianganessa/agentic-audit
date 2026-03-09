@@ -7,7 +7,7 @@ The AgentAudit MCP server gives AI agents self-awareness of their audit trail. A
 ## Setup
 
 ```bash
-pip install agentaudit-mcp
+pip install agentic-audit-mcp
 ```
 
 Configure in your MCP client (e.g., Claude Code `~/.claude/mcp.json`):

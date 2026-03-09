@@ -5,7 +5,7 @@ AgentAudit provides a LangChain callback handler that logs tool calls, chain sta
 ## Installation
 
 ```bash
-pip install agentaudit
+pip install agentic-audit
 ```
 
 ## Setup

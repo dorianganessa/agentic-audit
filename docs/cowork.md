@@ -13,7 +13,7 @@ The plugin installs deterministic hooks that fire on every tool call Cowork make
 ## Individual Setup
 
 1. Install AgentAudit (self-hosted or cloud)
-2. Install the hook CLI: `pip install agentaudit`
+2. Install the hook CLI: `pip install agentic-audit`
 3. Set environment variables in your shell profile
 4. Install the plugin: `/plugin install github:adrianosanges/agentaudit --path plugins/cowork`
 5. Open Cowork and verify events appear in the dashboard
