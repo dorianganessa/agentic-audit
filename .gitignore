@@ -45,3 +45,6 @@ docker-compose.override.yml
 # AgentAudit
 buffer.jsonl
 *.pdf
+
+# MkDocs build output
+site_docs/

@@ -1,15 +1,36 @@
 [project]
 name = "agentaudit-mcp"
 version = "0.1.0"
-description = "AgentAudit MCP server — lets agents query their own audit trail"
+description = "MCP server for AgentAudit — lets AI agents query their own compliance audit trail"
+readme = "README.md"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
+authors = [
+    {name = "Adriano Sanges", email = "adriano@agentaudit.dev"},
+]
+keywords = ["ai", "mcp", "model-context-protocol", "audit", "compliance"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
 dependencies = [
-    "mcp[cli]>=1.0.0",
-    "agentaudit",
+    "agentaudit>=0.1.0",
+    "mcp[cli]>=1.0",
 ]
 
 [project.scripts]
 agentaudit-mcp = "agentaudit_mcp.server:main"
+
+[project.urls]
+Homepage = "https://agentaudit.dev"
+Documentation = "https://docs.agentaudit.dev"
+Repository = "https://github.com/dorianganessa/agentaudit"
 
 [build-system]
 requires = ["hatchling"]

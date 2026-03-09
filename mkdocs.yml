@@ -1,0 +1,105 @@
+site_name: AgentAudit
+site_url: https://docs.agentaudit.dev
+site_dir: site_docs
+site_description: "Open-source compliance monitoring for AI agents. Auto PII detection, risk scoring, GDPR / AI Act / SOC 2 mapping."
+site_author: Adriano Sanges
+repo_url: https://github.com/dorianganessa/agentaudit
+repo_name: dorianganessa/agentaudit
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: custom
+    accent: custom
+  font:
+    text: Plus Jakarta Sans
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/shield-check
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - content.action.view
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/dorianganessa/agentaudit
+  homepage: https://agentaudit.dev
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quickstart: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Integrations:
+    - Claude Code: integrations/claude-code.md
+    - Cowork: integrations/cowork.md
+    - LangChain: integrations/langchain.md
+    - CrewAI: integrations/crewai.md
+    - Codex: integrations/codex.md
+    - REST API: integrations/rest-api.md
+  - Concepts:
+    - PII Detection: concepts/pii-detection.md
+    - Risk Scoring: concepts/risk-scoring.md
+    - Framework Mapping: concepts/framework-mapping.md
+    - Policy System: concepts/policy-system.md
+    - Hooks Architecture: concepts/hooks-architecture.md
+  - API Reference:
+    - Events: api-reference/events.md
+    - Policy: api-reference/policy.md
+    - Authentication: api-reference/authentication.md
+  - Guides:
+    - Audit a Claude Code Session: guides/audit-claude-code-session.md
+    - Set Up Slack Alerts: guides/slack-alerts.md
+    - Export a Compliance Report: guides/export-compliance-report.md
+    - Configure Paranoid Mode: guides/paranoid-mode.md
+    - Enterprise Deployment: guides/enterprise-deployment.md
+  - Self-Hosting:
+    - Docker Deployment: self-hosting/docker.md
+    - Database: self-hosting/database.md
+    - Upgrading: self-hosting/upgrading.md

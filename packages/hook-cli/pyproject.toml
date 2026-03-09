@@ -1,14 +1,36 @@
 [project]
 name = "agentaudit-hook"
 version = "0.1.0"
-description = "AgentAudit CLI for Claude Code hooks"
+description = "CLI hook for Claude Code and Cowork — automatic compliance monitoring for AI coding agents"
+readme = "README.md"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
+authors = [
+    {name = "Adriano Sanges", email = "adriano@agentaudit.dev"},
+]
+keywords = ["ai", "claude-code", "cowork", "audit", "compliance", "hooks", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Environment :: Console",
+    "Typing :: Typed",
+]
 dependencies = [
-    "agentaudit",
+    "agentaudit>=0.1.0",
 ]
 
 [project.scripts]
 agentaudit-hook = "agentaudit_hook.cli:main"
+
+[project.urls]
+Homepage = "https://agentaudit.dev"
+Documentation = "https://docs.agentaudit.dev/integrations/claude-code"
+Repository = "https://github.com/dorianganessa/agentaudit"
 
 [build-system]
 requires = ["hatchling"]
