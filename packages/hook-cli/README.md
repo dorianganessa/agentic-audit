@@ -7,7 +7,7 @@ Every tool call — file reads, writes, shell commands, web fetches — is logge
 ## Install
 
 ```bash
-pip install agent-audit-hook
+pip install agentic-audit-hook
 ```
 
 ## Setup

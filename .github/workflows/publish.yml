@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build SDK
-        run: uv build --package agent-audit
+        run: uv build --package agentic-audit
       - name: Publish SDK
         run: uv publish
         env:
@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build Hook CLI
-        run: uv build --package agent-audit-hook
+        run: uv build --package agentic-audit-hook
       - name: Publish Hook CLI
         run: uv publish
         env:
@@ -61,7 +61,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Build MCP Server
-        run: uv build --package agent-audit-mcp
+        run: uv build --package agentic-audit-mcp
       - name: Publish MCP Server
         run: uv publish
         env:

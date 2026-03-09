@@ -5,9 +5,9 @@ description = "Log, classify and audit every AI agent action for GDPR/AI Act/SOC
 requires-python = ">=3.12"
 dependencies = [
     "agentaudit-api",
-    "agent-audit",
-    "agent-audit-hook",
-    "agent-audit-mcp",
+    "agentic-audit",
+    "agentic-audit-hook",
+    "agentic-audit-mcp",
 ]
 
 [tool.uv.workspace]
@@ -15,9 +15,9 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 agentaudit-api = { workspace = true }
-agent-audit = { workspace = true }
-agent-audit-hook = { workspace = true }
-agent-audit-mcp = { workspace = true }
+agentic-audit = { workspace = true }
+agentic-audit-hook = { workspace = true }
+agentic-audit-mcp = { workspace = true }
 
 [tool.ruff]
 target-version = "py312"
@@ -60,9 +60,9 @@ testpaths = ["tests"]
 [dependency-groups]
 dev = [
     "agentaudit-api",
-    "agent-audit",
-    "agent-audit-hook",
-    "agent-audit-mcp",
+    "agentic-audit",
+    "agentic-audit-hook",
+    "agentic-audit-mcp",
     "coverage>=7.6.0",
     "httpx>=0.28.1",
     "langchain-core>=0.3.0",

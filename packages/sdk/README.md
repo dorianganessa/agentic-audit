@@ -7,7 +7,7 @@ Log every AI agent action, auto-detect PII, score risk, and map to GDPR / AI Act
 ## Install
 
 ```bash
-pip install agent-audit
+pip install agentic-audit
 ```
 
 ## Quick start
@@ -43,9 +43,9 @@ async with AsyncAgentAudit(api_key="aa_live_xxxxx") as audit:
 
 ## Integrations
 
-- **Claude Code** — zero-overhead deterministic hooks via [`agent-audit-hook`](https://pypi.org/project/agent-audit-hook/)
+- **Claude Code** — zero-overhead deterministic hooks via [`agentic-audit-hook`](https://pypi.org/project/agentic-audit-hook/)
 - **Cowork** — plugin with automatic hook registration
-- **LangChain** — `pip install agent-audit[langchain]` for callback handler
+- **LangChain** — `pip install agentic-audit[langchain]` for callback handler
 - **CrewAI** — event hook for multi-agent crews
 - **Any agent** — REST API / this SDK
 
