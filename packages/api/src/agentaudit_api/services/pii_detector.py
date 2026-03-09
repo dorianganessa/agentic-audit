@@ -29,11 +29,9 @@ _API_KEY = re.compile(
     r"|xox[bpras]-[a-zA-Z0-9\-]{10,}"
     r")"
 )
-_DB_CONN_STRING = re.compile(
-    r"(?:postgresql|mysql|mongodb|redis|amqp)://[^\s\"'`]+"
-)
+_DB_CONN_STRING = re.compile(r"(?:postgresql|mysql|mongodb|redis|amqp)://[^\s\"'`]+")
 
-_PATTERNS: list[tuple[str, re.Pattern]] = [
+_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("email", _EMAIL),
     ("ip_address", _IPV4),
     ("phone", _PHONE),
@@ -45,14 +43,21 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
 
 @dataclass
 class PiiResult:
+    """Result of PII detection scan."""
+
     detected: bool = False
     fields: list[str] = field(default_factory=list)
 
 
-def detect_pii(data: dict, context: dict) -> PiiResult:
+def detect_pii(data: dict[str, object], context: dict[str, object]) -> PiiResult:
     """Scan data and context dicts for PII patterns.
 
-    Returns which PII types were found.
+    Args:
+        data: The event data payload.
+        context: The event context metadata.
+
+    Returns:
+        A PiiResult indicating which PII types were found.
     """
     found: set[str] = set()
     _scan_value(data, found)

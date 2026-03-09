@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import HTMLResponse
@@ -19,19 +21,20 @@ from agentaudit_api.models.organization import Organization
 from agentaudit_api.services.event_service import get_event, get_stats, list_events
 from agentaudit_api.services.report_pdf import generate_pdf
 
-templates = Jinja2Templates(
-    directory=str(Path(__file__).resolve().parent.parent / "templates")
-)
+logger = logging.getLogger(__name__)
+
+templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent / "templates"))
 
 router = APIRouter()
 
 
 def _get_first_api_key(session: Session) -> ApiKey | None:
     """Get the first active API key (dashboard uses session-less auth for now)."""
-    return session.query(ApiKey).filter(ApiKey.is_active.is_(True)).first()
+    return session.query(ApiKey).filter(ApiKey.is_active.is_(True)).first()  # type: ignore[attr-defined]
 
 
 def _time_range_to_dates(time_range: str) -> tuple[datetime | None, datetime | None]:
+    """Convert a time range string to (after, before) datetime tuple."""
     now = datetime.now(UTC)
     if time_range == "24h":
         return now - timedelta(hours=24), now
@@ -43,10 +46,8 @@ def _time_range_to_dates(time_range: str) -> tuple[datetime | None, datetime | N
 
 
 def _prettify_json(data: object) -> str:
-    """Pretty-print JSON with HTML syntax highlighting."""
-    raw = json.dumps(data, indent=2, default=str)
-    # Simple regex-free approach: just return raw JSON, CSS handles mono styling
-    return raw
+    """Pretty-print JSON for display."""
+    return json.dumps(data, indent=2, default=str)
 
 
 def _risk_explanation(event: AuditEvent) -> str | None:
@@ -54,7 +55,7 @@ def _risk_explanation(event: AuditEvent) -> str | None:
     risk = event.risk_level
     if risk == "low":
         return None
-    data = event.data or {}
+    data: dict[str, Any] = event.data or {}
     command = str(data.get("command", ""))
 
     if risk == "critical":
@@ -72,7 +73,7 @@ def _risk_explanation(event: AuditEvent) -> str | None:
     return None
 
 
-@router.get("/dashboard", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 def timeline(
     request: Request,
     risk_level: str | None = Query(None),
@@ -84,7 +85,8 @@ def timeline(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     session: Session = Depends(get_session),
-):
+) -> Response:
+    """Render the event timeline dashboard."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
@@ -111,7 +113,7 @@ def timeline(
         offset=offset,
     )
 
-    filters = {}
+    filters: dict[str, str] = {}
     if risk_level:
         filters["risk_level"] = risk_level
     if agent_id:
@@ -146,12 +148,13 @@ def timeline(
     )
 
 
-@router.get("/dashboard/events/{event_id}", response_class=HTMLResponse)
+@router.get("/dashboard/events/{event_id}", response_class=HTMLResponse, include_in_schema=False)
 def event_detail(
     request: Request,
     event_id: str,
     session: Session = Depends(get_session),
-):
+) -> Response:
+    """Render the event detail page."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
@@ -175,16 +178,21 @@ def event_detail(
     )
 
 
-@router.get("/dashboard/policy", response_class=HTMLResponse)
+@router.get("/dashboard/policy", response_class=HTMLResponse, include_in_schema=False)
 def policy_page(
     request: Request,
     session: Session = Depends(get_session),
-):
+) -> Response:
+    """Render the policy management page."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
 
-    org = session.query(Organization).filter(Organization.id == api_key.org_id).first()
+    org = (
+        session.query(Organization)
+        .filter(Organization.id == api_key.org_id)  # type: ignore[arg-type]
+        .first()
+    )
     if org is None:
         return HTMLResponse("<h1>Organization not found</h1>", status_code=404)
 
@@ -201,7 +209,7 @@ def policy_page(
     )
 
 
-@router.put("/dashboard/policy", response_class=HTMLResponse)
+@router.put("/dashboard/policy", response_class=HTMLResponse, include_in_schema=False)
 def update_policy_form(
     request: Request,
     session: Session = Depends(get_session),
@@ -211,16 +219,21 @@ def update_policy_form(
     fw_soc2: bool = Query(False),
     blocking_enabled: bool = Query(False),
     block_on: str = Query("critical"),
-):
+) -> Response:
+    """Update the policy via the dashboard form (HTMX)."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return HTMLResponse('<div class="flash flash-error">No API key configured</div>')
 
-    org = session.query(Organization).filter(Organization.id == api_key.org_id).first()
+    org = (
+        session.query(Organization)
+        .filter(Organization.id == api_key.org_id)  # type: ignore[arg-type]
+        .first()
+    )
     if org is None:
         return HTMLResponse('<div class="flash flash-error">Organization not found</div>')
 
-    current = dict(org.policy)
+    current: dict[str, Any] = dict(org.policy)
     current["logging_level"] = logging_level
     current["frameworks"] = {"gdpr": fw_gdpr, "ai_act": fw_ai_act, "soc2": fw_soc2}
     current["blocking_rules"] = {"enabled": blocking_enabled, "block_on": block_on}
@@ -233,12 +246,13 @@ def update_policy_form(
     return HTMLResponse('<div class="flash flash-success">Policy updated successfully</div>')
 
 
-@router.get("/dashboard/stats", response_class=HTMLResponse)
+@router.get("/dashboard/stats", response_class=HTMLResponse, include_in_schema=False)
 def stats_page(
     request: Request,
     range: str = Query("7d"),
     session: Session = Depends(get_session),
-):
+) -> Response:
+    """Render the stats overview page."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
@@ -247,39 +261,25 @@ def stats_page(
     stats = get_stats(session, api_key.id, after=after, before=before)
 
     # Top agents
-    agents_q = (
-        session.query(AuditEvent.agent_id, func.count())
-        .filter(AuditEvent.api_key_id == api_key.id)
+    agents_q = session.query(AuditEvent.agent_id, func.count()).filter(  # type: ignore[call-overload]
+        AuditEvent.api_key_id == api_key.id
     )
     if after:
         agents_q = agents_q.filter(AuditEvent.created_at > after)
     if before:
         agents_q = agents_q.filter(AuditEvent.created_at < before)
-    top_agents = (
-        agents_q.group_by(AuditEvent.agent_id)
-        .order_by(func.count().desc())
-        .limit(5)
-        .all()
-    )
+    top_agents = agents_q.group_by(AuditEvent.agent_id).order_by(func.count().desc()).limit(5).all()
 
     # Top actions by risk (high/critical actions first)
-    actions_q = (
-        session.query(AuditEvent.action, func.count())
-        .filter(
-            AuditEvent.api_key_id == api_key.id,
-            AuditEvent.risk_level.in_(["high", "critical"]),
-        )
+    actions_q = session.query(AuditEvent.action, func.count()).filter(  # type: ignore[call-overload]
+        AuditEvent.api_key_id == api_key.id,
+        AuditEvent.risk_level.in_(["high", "critical"]),  # type: ignore[union-attr]
     )
     if after:
         actions_q = actions_q.filter(AuditEvent.created_at > after)
     if before:
         actions_q = actions_q.filter(AuditEvent.created_at < before)
-    top_actions = (
-        actions_q.group_by(AuditEvent.action)
-        .order_by(func.count().desc())
-        .limit(5)
-        .all()
-    )
+    top_actions = actions_q.group_by(AuditEvent.action).order_by(func.count().desc()).limit(5).all()
 
     return templates.TemplateResponse(
         "dashboard/stats.html",
@@ -294,11 +294,12 @@ def stats_page(
     )
 
 
-@router.get("/dashboard/report/pdf")
+@router.get("/dashboard/report/pdf", include_in_schema=False)
 def report_pdf(
     range: str = Query("7d"),
     session: Session = Depends(get_session),
-):
+) -> Response:
+    """Generate and download a PDF compliance report."""
     api_key = _get_first_api_key(session)
     if api_key is None:
         return Response("No API key configured", status_code=500)

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
-RISK_LEVELS = ("low", "medium", "high", "critical")
-_RISK_ORDER = {level: i for i, level in enumerate(RISK_LEVELS)}
+RISK_LEVELS: tuple[str, ...] = ("low", "medium", "high", "critical")
+_RISK_ORDER: dict[str, int] = {level: i for i, level in enumerate(RISK_LEVELS)}
 
 _EMAIL = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 _CRED_PATTERNS = [
@@ -17,6 +18,7 @@ _CRED_PATTERNS = [
 
 
 def _flatten(data: object) -> str:
+    """Recursively flatten a data structure to a single string."""
     if isinstance(data, str):
         return data
     if isinstance(data, dict):
@@ -26,21 +28,31 @@ def _flatten(data: object) -> str:
     return str(data) if data is not None else ""
 
 
-def _has_pii(data: dict) -> tuple[bool, list[str]]:
+def _has_pii(data: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Check for PII patterns in data."""
     text = _flatten(data)
-    fields = []
+    fields: list[str] = []
     if _EMAIL.search(text):
         fields.append("email")
     return bool(fields), fields
 
 
-def _has_creds(data: dict) -> bool:
+def _has_creds(data: dict[str, Any]) -> bool:
+    """Check for credential patterns in data."""
     text = _flatten(data)
     return any(p.search(text) for p in _CRED_PATTERNS)
 
 
-def check_risk(action: str, data: dict) -> dict:
-    """Score the risk of an action locally, without logging it."""
+def check_risk(action: str, data: dict[str, Any]) -> dict[str, Any]:
+    """Score the risk of an action locally, without logging it.
+
+    Args:
+        action: The action type to check.
+        data: The action data payload.
+
+    Returns:
+        Dictionary with risk_level, pii_detected, pii_fields, and a note.
+    """
     pii_detected, pii_fields = _has_pii(data)
     command = str(data.get("command", "")).lower()
 

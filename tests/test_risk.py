@@ -16,9 +16,7 @@ def test_risk_api_key_in_data():
 
 
 def test_risk_rm_rf():
-    result = score_risk(
-        "shell_command", {"command": "rm -rf /var/data"}, {}, pii_detected=False
-    )
+    result = score_risk("shell_command", {"command": "rm -rf /var/data"}, {}, pii_detected=False)
     assert result == "critical"
 
 
@@ -53,23 +51,17 @@ def test_risk_prod_command():
 
 
 def test_risk_env_file_write():
-    result = score_risk(
-        "file_write", {"file_path": "/app/.env"}, {}, pii_detected=False
-    )
+    result = score_risk("file_write", {"file_path": "/app/.env"}, {}, pii_detected=False)
     assert result == "high"
 
 
 def test_risk_secret_file_write():
-    result = score_risk(
-        "file_write", {"file_path": "/app/secrets.yaml"}, {}, pii_detected=False
-    )
+    result = score_risk("file_write", {"file_path": "/app/secrets.yaml"}, {}, pii_detected=False)
     assert result == "high"
 
 
 def test_risk_env_file_read():
-    result = score_risk(
-        "file_read", {"file_path": "/app/.env.production"}, {}, pii_detected=False
-    )
+    result = score_risk("file_read", {"file_path": "/app/.env.production"}, {}, pii_detected=False)
     assert result == "high"
 
 
@@ -81,23 +73,17 @@ def test_risk_pem_file_read():
 
 
 def test_risk_pii_production():
-    result = score_risk(
-        "access_record", {}, {"environment": "production"}, pii_detected=True
-    )
+    result = score_risk("access_record", {}, {"environment": "production"}, pii_detected=True)
     assert result == "high"
 
 
 def test_risk_pii_detected():
-    result = score_risk(
-        "access_record", {}, {}, pii_detected=True
-    )
+    result = score_risk("access_record", {}, {}, pii_detected=True)
     assert result == "medium"
 
 
 def test_risk_sudo():
-    result = score_risk(
-        "shell_command", {"command": "sudo apt update"}, {}, pii_detected=False
-    )
+    result = score_risk("shell_command", {"command": "sudo apt update"}, {}, pii_detected=False)
     assert result == "medium"
 
 
@@ -109,9 +95,7 @@ def test_risk_chmod():
 
 
 def test_risk_npm_install():
-    result = score_risk(
-        "shell_command", {"command": "npm install express"}, {}, pii_detected=False
-    )
+    result = score_risk("shell_command", {"command": "npm install express"}, {}, pii_detected=False)
     assert result == "low"
 
 
@@ -123,16 +107,12 @@ def test_risk_pip_install():
 
 
 def test_risk_innocuous():
-    result = score_risk(
-        "shell_command", {"command": "pytest tests/ -v"}, {}, pii_detected=False
-    )
+    result = score_risk("shell_command", {"command": "pytest tests/ -v"}, {}, pii_detected=False)
     assert result == "low"
 
 
 def test_risk_file_read_normal():
-    result = score_risk(
-        "file_read", {"file_path": "/app/main.py"}, {}, pii_detected=False
-    )
+    result = score_risk("file_read", {"file_path": "/app/main.py"}, {}, pii_detected=False)
     assert result == "low"
 
 

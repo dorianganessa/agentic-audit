@@ -14,6 +14,9 @@ cd agentaudit
 # Install dependencies
 uv sync
 
+# Install pre-commit hooks
+uv run pre-commit install
+
 # Start Postgres
 docker compose up db -d
 
@@ -36,16 +39,20 @@ Tests use `testcontainers` to spin up a real Postgres instance — Docker must b
 
 ```bash
 uv run pytest tests/ -v
+
+# With coverage
+uv run pytest tests/ -v --cov=packages --cov-report=term-missing
 ```
 
 ## Code Style
 
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting, and [mypy](https://mypy.readthedocs.io/) for type checking.
 
 ```bash
 # Check
 uv run ruff check .
 uv run ruff format --check .
+uv run mypy packages/
 
 # Fix
 uv run ruff check --fix .
@@ -56,6 +63,30 @@ Key settings (from `pyproject.toml`):
 - Target: Python 3.12
 - Line length: 100
 - Rules: E, F, I, N, UP, B, SIM
+- mypy: strict mode
+
+### Pre-commit Hooks
+
+We use pre-commit to run ruff automatically on every commit:
+
+```bash
+uv add --dev pre-commit
+uv run pre-commit install
+```
+
+Hooks run automatically on `git commit`. To run manually:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+## Type Hints
+
+All public functions must have complete type annotations. Use `dict[str, Any]` instead of bare `dict`, `list[str]` instead of bare `list`, and `|` for union types.
+
+## Docstrings
+
+All public functions, classes, and modules must have Google-style docstrings.
 
 ## Project Structure
 
@@ -65,6 +96,8 @@ packages/
 ├── sdk/          # Python SDK, LangChain & Codex integrations
 ├── hook-cli/     # Claude Code hooks CLI
 └── mcp-server/   # MCP server for agent self-awareness
+plugins/
+└── cowork/       # Claude Cowork plugin (hooks + skill)
 ```
 
 ## Pull Request Process
@@ -73,8 +106,9 @@ packages/
 2. Add tests for new functionality.
 3. Ensure all tests pass: `uv run pytest tests/ -v`
 4. Ensure linting passes: `uv run ruff check . && uv run ruff format --check .`
-5. Update documentation if you changed public APIs.
-6. Open a PR with a clear description of your changes.
+5. Ensure type checking passes: `uv run mypy packages/`
+6. Update documentation if you changed public APIs.
+7. Open a PR with a clear description of your changes.
 
 ## Commit Messages
 

@@ -3,18 +3,32 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
-RISK_LEVELS = ("low", "medium", "high", "critical")
-_RISK_ORDER = {level: i for i, level in enumerate(RISK_LEVELS)}
+RISK_LEVELS: tuple[str, ...] = ("low", "medium", "high", "critical")
+_RISK_ORDER: dict[str, int] = {level: i for i, level in enumerate(RISK_LEVELS)}
 
 
 def score_risk(
     action: str,
-    data: dict,
-    context: dict,
+    data: dict[str, Any],
+    context: dict[str, Any],
     pii_detected: bool,
 ) -> str:
-    """Compute the risk level for an audit event. Returns the highest matching level."""
+    """Compute the risk level for an audit event.
+
+    Evaluates the action and data against a set of rules and returns
+    the highest matching risk level.
+
+    Args:
+        action: The action type (e.g., shell_command, file_read).
+        data: Action-specific payload.
+        context: Environment metadata.
+        pii_detected: Whether PII was found in the event.
+
+    Returns:
+        One of: low, medium, high, critical.
+    """
     levels: list[str] = []
 
     command = str(data.get("command", ""))
@@ -62,7 +76,7 @@ def score_risk(
     return max(levels, key=lambda level: _RISK_ORDER[level])
 
 
-def _has_credential_indicators(action: str, data: dict) -> bool:
+def _has_credential_indicators(action: str, data: dict[str, Any]) -> bool:
     """Check if the action or data suggests credential access."""
     if "credential" in action.lower() or "password" in action.lower():
         return True
@@ -85,13 +99,13 @@ def _matches_any(text: str, keywords: list[str]) -> bool:
 
 
 def _path_matches_sensitive_write(file_path: str) -> bool:
+    """Check if a file path indicates a sensitive write target."""
     path_lower = file_path.lower()
-    return any(
-        pat in path_lower for pat in [".env", "auth", "secret", "credential", "token"]
-    )
+    return any(pat in path_lower for pat in [".env", "auth", "secret", "credential", "token"])
 
 
 def _path_matches_sensitive_read(file_path: str) -> bool:
+    """Check if a file path indicates a sensitive read target."""
     path_lower = file_path.lower()
     return any(pat in path_lower for pat in [".env", ".pem", ".key", "id_rsa", "credential"])
 

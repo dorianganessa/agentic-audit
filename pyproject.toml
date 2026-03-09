@@ -27,6 +27,33 @@ line-length = 100
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
 ignore = ["B008"]  # FastAPI Depends() in function defaults is standard pattern
 
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = [
+    "testcontainers.*",
+    "fpdf.*",
+    "mcp.*",
+    "langchain_core.*",
+    "sqlmodel.*",
+    "ulid.*",
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
@@ -36,10 +63,13 @@ dev = [
     "agentaudit",
     "agentaudit-hook",
     "agentaudit-mcp",
+    "coverage>=7.6.0",
     "httpx>=0.28.1",
     "langchain-core>=0.3.0",
+    "mypy>=1.13.0",
     "pytest>=9.0.2",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.15.5",
     "testcontainers>=4.14.1",
 ]

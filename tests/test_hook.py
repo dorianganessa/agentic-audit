@@ -220,12 +220,14 @@ def test_cli_post_creates_event(app, api_key_raw, monkeypatch):
     monkeypatch.setenv("AGENTAUDIT_API_KEY", api_key_raw)
     monkeypatch.setenv("AGENTAUDIT_BASE_URL", str(tc.base_url))
 
-    hook_json = json.dumps({
-        "session_id": "sess_test",
-        "tool_name": "Bash",
-        "tool_input": {"command": "ls -la"},
-        "hook_event_name": "PostToolUse",
-    })
+    hook_json = json.dumps(
+        {
+            "session_id": "sess_test",
+            "tool_name": "Bash",
+            "tool_input": {"command": "ls -la"},
+            "hook_event_name": "PostToolUse",
+        }
+    )
 
     monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
     monkeypatch.setattr("sys.argv", ["agentaudit-hook", "post"])
@@ -245,11 +247,13 @@ def test_cli_pre_api_down_buffers(monkeypatch, tmp_path):
 
     import pytest
 
-    hook_json = json.dumps({
-        "tool_name": "Bash",
-        "tool_input": {"command": "echo test"},
-        "hook_event_name": "PreToolUse",
-    })
+    hook_json = json.dumps(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "echo test"},
+            "hook_event_name": "PreToolUse",
+        }
+    )
 
     monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
     monkeypatch.setattr("sys.argv", ["agentaudit-hook", "pre"])
@@ -311,11 +315,13 @@ def test_cli_pre_blocking(app, api_key_raw, monkeypatch):
     monkeypatch.setenv("AGENTAUDIT_BASE_URL", str(tc.base_url))
 
     # High-risk command: psql -h prod
-    hook_json = json.dumps({
-        "tool_name": "Bash",
-        "tool_input": {"command": "psql -h prod-db -c 'SELECT * FROM users'"},
-        "hook_event_name": "PreToolUse",
-    })
+    hook_json = json.dumps(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "psql -h prod-db -c 'SELECT * FROM users'"},
+            "hook_event_name": "PreToolUse",
+        }
+    )
 
     monkeypatch.setattr("sys.stdin", io.StringIO(hook_json))
     monkeypatch.setattr("sys.argv", ["agentaudit-hook", "pre"])

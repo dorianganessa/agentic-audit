@@ -1,3 +1,7 @@
+"""API router composition: combines events, org, and dashboard routes."""
+
+from __future__ import annotations
+
 from fastapi import APIRouter
 
 from agentaudit_api.api.dashboard import router as dashboard_router

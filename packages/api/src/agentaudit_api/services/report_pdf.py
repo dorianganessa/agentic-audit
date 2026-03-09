@@ -1,22 +1,34 @@
-"""PDF report generator using fpdf2."""
+"""PDF compliance report generator using fpdf2."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 from fpdf import FPDF
+
+from agentaudit_api.models.event import AuditEvent
 
 
 def generate_pdf(
     *,
-    stats: dict,
-    risky_events: list,
+    stats: dict[str, Any],
+    risky_events: list[AuditEvent],
     framework_counts: dict[str, dict[str, int]],
     after: datetime | None,
     before: datetime | None,
     time_range: str,
 ) -> bytes:
-    """Generate a compliance report PDF and return raw bytes."""
+    """Generate a compliance report PDF and return raw bytes.
+
+    Args:
+        stats: Aggregate statistics from get_stats.
+        risky_events: List of high/critical risk events to include.
+        framework_counts: Framework article counts.
+        after: Start of the report period.
+        before: End of the report period.
+        time_range: Human-readable time range label.
+    """
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
@@ -45,7 +57,7 @@ def generate_pdf(
     _kv(pdf, "Unique Sessions", str(stats.get("unique_sessions", 0)))
     pdf.ln(2)
 
-    by_risk = stats.get("by_risk_level", {})
+    by_risk: dict[str, int] = stats.get("by_risk_level", {})
     for level in ("low", "medium", "high", "critical"):
         _kv(pdf, f"  {level.capitalize()}", str(by_risk.get(level, 0)))
     pdf.ln(6)
@@ -72,10 +84,13 @@ def generate_pdf(
         for i, ev in enumerate(risky_events, 1):
             pdf.set_font("Helvetica", "B", 9)
             created = ev.created_at.strftime("%Y-%m-%d %H:%M:%S") if ev.created_at else "?"
+            risk = ev.risk_level or "unknown"
             pdf.cell(
-                0, 5,
-                f"{i}. [{ev.risk_level.upper()}] {ev.action} - {ev.agent_id} ({created})",
-                new_x="LMARGIN", new_y="NEXT",
+                0,
+                5,
+                f"{i}. [{risk.upper()}] {ev.action} - {ev.agent_id} ({created})",
+                new_x="LMARGIN",
+                new_y="NEXT",
             )
             pdf.set_font("Helvetica", "", 8)
             data_str = str(ev.data or {})
@@ -84,9 +99,11 @@ def generate_pdf(
             pdf.cell(0, 4, f"   Data: {data_str}", new_x="LMARGIN", new_y="NEXT")
             if ev.pii_detected:
                 pdf.cell(
-                    0, 4,
+                    0,
+                    4,
                     f"   PII: {', '.join(ev.pii_fields) if ev.pii_fields else 'detected'}",
-                    new_x="LMARGIN", new_y="NEXT",
+                    new_x="LMARGIN",
+                    new_y="NEXT",
                 )
             pdf.ln(1)
     else:
@@ -103,6 +120,7 @@ def generate_pdf(
 
 
 def _section_header(pdf: FPDF, title: str) -> None:
+    """Render a section header with an underline."""
     pdf.set_font("Helvetica", "B", 13)
     pdf.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
     pdf.set_draw_color(100, 100, 100)
@@ -111,6 +129,7 @@ def _section_header(pdf: FPDF, title: str) -> None:
 
 
 def _kv(pdf: FPDF, key: str, value: str) -> None:
+    """Render a key-value row in the PDF."""
     pdf.set_font("Helvetica", "", 10)
     pdf.cell(60, 6, key, new_x="RIGHT")
     pdf.set_font("Helvetica", "B", 10)

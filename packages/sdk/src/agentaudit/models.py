@@ -1,7 +1,10 @@
+"""Data models for the AgentAudit SDK."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -11,20 +14,25 @@ class AuditEvent:
     id: str
     agent_id: str
     action: str
-    data: dict = field(default_factory=dict)
-    context: dict = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     reasoning: str | None = None
     risk_level: str | None = None
     pii_detected: bool = False
     pii_fields: list[str] = field(default_factory=list)
-    frameworks: dict = field(default_factory=dict)
+    frameworks: dict[str, Any] = field(default_factory=dict)
     created_at: datetime | None = None
     stored: bool = True
     decision: str = "allow"
     reason: str | None = None
 
     @classmethod
-    def from_api_response(cls, data: dict) -> AuditEvent:
+    def from_api_response(cls, data: dict[str, Any]) -> AuditEvent:
+        """Construct an AuditEvent from an API response dictionary.
+
+        Args:
+            data: Raw dictionary from the API JSON response.
+        """
         created_at = data.get("created_at")
         if isinstance(created_at, str):
             created_at = datetime.fromisoformat(created_at)

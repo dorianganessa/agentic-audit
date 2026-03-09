@@ -1,4 +1,9 @@
+"""Organization policy API endpoints."""
+
+from __future__ import annotations
+
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -18,7 +23,7 @@ def _get_org(session: Session, api_key: ApiKey) -> Organization:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No organization associated with this API key",
         )
-    org = session.query(Organization).filter(Organization.id == api_key.org_id).first()
+    org = session.query(Organization).filter(Organization.id == api_key.org_id).first()  # type: ignore[arg-type]
     if org is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -27,22 +32,38 @@ def _get_org(session: Session, api_key: ApiKey) -> Organization:
     return org
 
 
-@router.get("/org/policy")
+@router.get(
+    "/org/policy",
+    summary="Get organization policy",
+    description="Returns the current compliance policy for the organization.",
+    responses={
+        401: {"description": "Invalid or missing API key"},
+        404: {"description": "Organization not found"},
+    },
+)
 def get_policy(
     api_key: ApiKey = Depends(get_current_api_key),
     session: Session = Depends(get_session),
-) -> dict:
+) -> dict[str, Any]:
     """Get the current policy for the organization."""
     org = _get_org(session, api_key)
-    return org.policy
+    return dict(org.policy)
 
 
-@router.put("/org/policy")
+@router.put(
+    "/org/policy",
+    summary="Update organization policy",
+    description="Partially update the organization's compliance policy.",
+    responses={
+        401: {"description": "Invalid or missing API key"},
+        404: {"description": "Organization not found"},
+    },
+)
 def update_policy(
     policy_update: PolicyUpdate,
     api_key: ApiKey = Depends(get_current_api_key),
     session: Session = Depends(get_session),
-) -> dict:
+) -> dict[str, Any]:
     """Update the organization policy."""
     org = _get_org(session, api_key)
 
@@ -63,4 +84,4 @@ def update_policy(
     session.commit()
     session.refresh(org)
 
-    return org.policy
+    return dict(org.policy)

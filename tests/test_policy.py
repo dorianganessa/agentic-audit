@@ -55,9 +55,7 @@ def test_update_policy_partial(client, api_key_raw):
 def test_minimal_no_pii_not_stored(client, api_key_raw):
     """Minimal: event without PII → stored=false."""
     _set_policy(client, api_key_raw, logging_level="minimal")
-    data = _post(
-        client, api_key_raw, action="shell_command", data={"command": "ls -la"}
-    )
+    data = _post(client, api_key_raw, action="shell_command", data={"command": "ls -la"})
     assert data["stored"] is False
 
 
@@ -90,9 +88,7 @@ def test_standard_low_risk_not_stored(client, api_key_raw):
 def test_standard_medium_risk_stored(client, api_key_raw):
     """Standard: medium risk (PII) → stored."""
     _set_policy(client, api_key_raw, logging_level="standard")
-    data = _post(
-        client, api_key_raw, action="access_record", data={"email": "user@example.com"}
-    )
+    data = _post(client, api_key_raw, action="access_record", data={"email": "user@example.com"})
     assert data["stored"] is True
     assert data["risk_level"] == "medium"
 
@@ -198,9 +194,7 @@ def test_paranoid_not_enabled_no_block(client, api_key_raw):
 def test_frameworks_gdpr_pii(client, api_key_raw):
     """PII event maps to GDPR art_30."""
     _set_policy(client, api_key_raw, logging_level="full")
-    data = _post(
-        client, api_key_raw, action="access_record", data={"email": "user@example.com"}
-    )
+    data = _post(client, api_key_raw, action="access_record", data={"email": "user@example.com"})
     assert "gdpr" in data["frameworks"]
     assert "art_30" in data["frameworks"]["gdpr"]
 
@@ -208,9 +202,7 @@ def test_frameworks_gdpr_pii(client, api_key_raw):
 def test_frameworks_gdpr_access_pii(client, api_key_raw):
     """Access action with PII maps to GDPR art_15."""
     _set_policy(client, api_key_raw, logging_level="full")
-    data = _post(
-        client, api_key_raw, action="access_record", data={"email": "user@example.com"}
-    )
+    data = _post(client, api_key_raw, action="access_record", data={"email": "user@example.com"})
     assert "art_15" in data["frameworks"]["gdpr"]
 
 
@@ -255,9 +247,7 @@ def test_frameworks_soc2_disabled_by_default(client, api_key_raw):
         logging_level="full",
         frameworks={"gdpr": True, "ai_act": True, "soc2": False},
     )
-    data = _post(
-        client, api_key_raw, action="shell_command", data={"command": "echo hi"}
-    )
+    data = _post(client, api_key_raw, action="shell_command", data={"command": "echo hi"})
     assert "soc2" not in data["frameworks"]
 
 
@@ -269,9 +259,7 @@ def test_frameworks_soc2_enabled(client, api_key_raw):
         logging_level="full",
         frameworks={"gdpr": True, "ai_act": True, "soc2": True},
     )
-    data = _post(
-        client, api_key_raw, action="shell_command", data={"command": "echo hi"}
-    )
+    data = _post(client, api_key_raw, action="shell_command", data={"command": "echo hi"})
     assert "soc2" in data["frameworks"]
     assert "CC6.1" in data["frameworks"]["soc2"]
 
