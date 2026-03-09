@@ -33,13 +33,13 @@ If you already have a PostgreSQL database and want to run the API server separat
 **Prerequisites:** Python 3.12+
 
 ```bash
-pip install agentaudit
+pip install agentic-audit
 ```
 
 This installs:
 
-- **`agentaudit` Python SDK** — log events programmatically
-- **`agentaudit-hook` CLI** — Claude Code and Cowork hook integration
+- **`agentic-audit` Python SDK** — log events programmatically
+- **`agentic-audit-hook` CLI** — Claude Code and Cowork hook integration
 
 The SDK connects to a running AgentAudit API. Set the connection:
 
@@ -51,7 +51,7 @@ export AGENTAUDIT_BASE_URL="http://localhost:8000"
 To also install the API server via pip:
 
 ```bash
-pip install agentaudit-api
+pip install agentic-audit-api
 ```
 
 Then run it:

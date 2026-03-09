@@ -13,7 +13,7 @@ pip install agentic-audit-mcp
 Or run directly:
 
 ```bash
-uvx agentaudit-mcp
+uvx agentic-audit-mcp
 ```
 
 ## Configure in Claude Code
@@ -24,7 +24,7 @@ uvx agentaudit-mcp
   "mcpServers": {
     "agentaudit": {
       "command": "uvx",
-      "args": ["agentaudit-mcp"],
+      "args": ["agentic-audit-mcp"],
       "env": {
         "AGENTAUDIT_API_KEY": "aa_live_xxxxx",
         "AGENTAUDIT_BASE_URL": "http://localhost:8000"

@@ -21,7 +21,7 @@ docker compose logs api | grep "Default API key"
 === "Python SDK"
 
     ```bash
-    pip install agentaudit
+    pip install agentic-audit
     ```
 
     ```python

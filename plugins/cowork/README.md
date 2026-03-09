@@ -15,7 +15,7 @@ Each action is classified for risk (low/medium/high/critical), checked for PII, 
 ## Prerequisites
 
 1. AgentAudit server running (self-hosted or cloud)
-2. `agentaudit-hook` CLI installed: `pip install agentaudit`
+2. `agentaudit-hook` CLI installed: `pip install agentic-audit`
 3. Environment variables set:
    ```bash
    export AGENTAUDIT_API_KEY="aa_live_xxxxx"

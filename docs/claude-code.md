@@ -20,9 +20,9 @@ Claude Code fires hook events at four points:
 1. Install the hook CLI:
 
 ```bash
-pip install agentaudit
+pip install agentic-audit
 # or
-uv pip install agentaudit
+uv pip install agentic-audit
 ```
 
 2. Set environment variables in your shell profile (`~/.zshrc` or `~/.bashrc`):

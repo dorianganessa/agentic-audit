@@ -188,7 +188,7 @@ Configure in Claude Code MCP settings:
   "mcpServers": {
     "agentaudit": {
       "command": "uvx",
-      "args": ["agentaudit-mcp"],
+      "args": ["agentic-audit-mcp"],
       "env": {
         "AGENTAUDIT_API_KEY": "aa_live_xxxxx",
         "AGENTAUDIT_BASE_URL": "http://localhost:8000"

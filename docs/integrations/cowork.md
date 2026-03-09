@@ -10,7 +10,7 @@ AgentAudit provides a Cowork plugin that captures every action — connector acc
 ## Prerequisites
 
 - AgentAudit API running ([quickstart](../getting-started/quickstart.md))
-- `agentaudit-hook` CLI installed (`pip install agentaudit`)
+- `agentaudit-hook` CLI installed (`pip install agentic-audit`)
 - Environment variables set:
 
 ```bash
