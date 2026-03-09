@@ -1,5 +1,5 @@
 [project]
-name = "agent-audit-hook"
+name = "agentic-audit-hook"
 version = "0.1.0"
 description = "CLI hook for Claude Code and Cowork — automatic compliance monitoring for AI coding agents"
 readme = "README.md"
@@ -21,7 +21,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "agent-audit>=0.1.0",
+    "agentic-audit>=0.1.0",
 ]
 
 [project.scripts]
