@@ -1,10 +1,27 @@
 [project]
 name = "agentaudit"
 version = "0.1.0"
-description = "AgentAudit Python SDK — log, classify and audit AI agent actions"
+description = "Python SDK for AgentAudit — open-source compliance monitoring for AI agents"
+readme = "README.md"
+license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
+authors = [
+    {name = "Adriano Sanges", email = "adriano@agentaudit.dev"},
+]
+keywords = ["ai", "agents", "audit", "compliance", "gdpr", "ai-act", "soc2", "pii", "monitoring"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
 dependencies = [
-    "httpx>=0.28.0",
+    "httpx>=0.27,<1.0",
 ]
 
 [project.optional-dependencies]
@@ -12,6 +29,13 @@ langchain = ["langchain-core>=0.3.0"]
 
 [project.scripts]
 agentaudit-codex-watch = "agentaudit.integrations.codex_parser:watch_codex"
+
+[project.urls]
+Homepage = "https://agentaudit.dev"
+Documentation = "https://docs.agentaudit.dev"
+Repository = "https://github.com/dorianganessa/agentaudit"
+Issues = "https://github.com/dorianganessa/agentaudit/issues"
+Changelog = "https://github.com/dorianganessa/agentaudit/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
