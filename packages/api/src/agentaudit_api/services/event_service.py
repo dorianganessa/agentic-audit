@@ -1,0 +1,251 @@
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import func, text
+from sqlalchemy.orm import Session
+
+from agentaudit_api.models.event import AuditEvent, AuditEventCreate, AuditEventRead, generate_ulid
+from agentaudit_api.models.organization import DEFAULT_POLICY, Organization
+from agentaudit_api.services.framework_mapper import map_frameworks
+from agentaudit_api.services.pii_detector import detect_pii
+from agentaudit_api.services.risk_scorer import RISK_LEVELS, score_risk
+
+
+def _get_policy(session: Session, org_id: str | None) -> dict:
+    """Get the policy for an org, or the default."""
+    if org_id:
+        org = session.query(Organization).filter(Organization.id == org_id).first()
+        if org:
+            return org.policy
+    return {**DEFAULT_POLICY}
+
+
+def _should_store(logging_level: str, risk_level: str, pii_detected: bool) -> bool:
+    """Decide whether to persist the event based on logging level."""
+    if logging_level == "minimal":
+        return pii_detected
+    if logging_level == "standard":
+        return risk_level != "low" or pii_detected
+    # full and paranoid: store everything
+    return True
+
+
+def _should_block(policy: dict, risk_level: str) -> tuple[bool, str | None]:
+    """Decide whether to block the action (paranoid mode only)."""
+    logging_level = policy.get("logging_level", "standard")
+    blocking_rules = policy.get("blocking_rules", {})
+
+    if logging_level != "paranoid" or not blocking_rules.get("enabled", False):
+        return False, None
+
+    block_on = blocking_rules.get("block_on", "critical")
+    risk_order = {level: i for i, level in enumerate(RISK_LEVELS)}
+    event_risk = risk_order.get(risk_level, 0)
+    threshold_risk = risk_order.get(block_on, 3)
+
+    if event_risk >= threshold_risk:
+        return True, f"Action blocked: risk level '{risk_level}' >= threshold '{block_on}'"
+    return False, None
+
+
+def create_event(
+    session: Session,
+    event_data: AuditEventCreate,
+    api_key_id: str,
+    org_id: str | None = None,
+) -> AuditEventRead:
+    """Create a new audit event with PII detection, risk scoring, and policy enforcement."""
+    policy = _get_policy(session, org_id)
+    logging_level = policy.get("logging_level", "standard")
+    enabled_frameworks = policy.get("frameworks", {"gdpr": True, "ai_act": True, "soc2": False})
+
+    # PII detection
+    pii_result = detect_pii(event_data.data, event_data.context)
+
+    # Risk scoring
+    risk_level = score_risk(
+        action=event_data.action,
+        data=event_data.data,
+        context=event_data.context,
+        pii_detected=pii_result.detected,
+    )
+
+    # Framework mapping
+    frameworks = map_frameworks(
+        action=event_data.action,
+        risk_level=risk_level,
+        pii_detected=pii_result.detected,
+        reasoning=event_data.reasoning,
+        context=event_data.context,
+        agent_id=event_data.agent_id,
+        enabled_frameworks=enabled_frameworks,
+    )
+
+    # Blocking decision
+    blocked, reason = _should_block(policy, risk_level)
+    decision = "block" if blocked else "allow"
+
+    # Storage decision
+    stored = _should_store(logging_level, risk_level, pii_result.detected)
+
+    if stored:
+        event = AuditEvent(
+            agent_id=event_data.agent_id,
+            action=event_data.action,
+            data=event_data.data,
+            context=event_data.context,
+            reasoning=event_data.reasoning,
+            api_key_id=api_key_id,
+            pii_detected=pii_result.detected,
+            pii_fields=pii_result.fields,
+            risk_level=risk_level,
+            frameworks=frameworks,
+        )
+        session.add(event)
+        session.commit()
+        session.refresh(event)
+        result = AuditEventRead.model_validate(event)
+    else:
+        # Build a response without persisting
+        result = AuditEventRead(
+            id=generate_ulid(),
+            agent_id=event_data.agent_id,
+            action=event_data.action,
+            data=event_data.data,
+            context=event_data.context,
+            reasoning=event_data.reasoning,
+            pii_detected=pii_result.detected,
+            pii_fields=pii_result.fields,
+            risk_level=risk_level,
+            frameworks=frameworks,
+            created_at=datetime.now(),
+        )
+
+    result.stored = stored
+    result.decision = decision
+    result.reason = reason
+    return result
+
+
+def get_event(session: Session, event_id: str, api_key_id: str) -> AuditEvent | None:
+    """Get a single event by ID, scoped to the API key."""
+    return (
+        session.query(AuditEvent)
+        .filter(AuditEvent.id == event_id, AuditEvent.api_key_id == api_key_id)
+        .first()
+    )
+
+
+def list_events(
+    session: Session,
+    api_key_id: str,
+    *,
+    agent_id: str | None = None,
+    action: str | None = None,
+    risk_level: str | None = None,
+    pii_detected: bool | None = None,
+    session_id: str | None = None,
+    after: datetime | None = None,
+    before: datetime | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[AuditEvent], int]:
+    """List events with filtering. Returns (events, total_count)."""
+    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)
+
+    if agent_id is not None:
+        query = query.filter(AuditEvent.agent_id == agent_id)
+    if action is not None:
+        query = query.filter(AuditEvent.action == action)
+    if risk_level is not None:
+        query = query.filter(AuditEvent.risk_level == risk_level)
+    if pii_detected is not None:
+        query = query.filter(AuditEvent.pii_detected == pii_detected)
+    if session_id is not None:
+        query = query.filter(
+            text("context->>'session_id' = :sid").bindparams(sid=session_id)
+        )
+    if after is not None:
+        query = query.filter(AuditEvent.created_at > after)
+    if before is not None:
+        query = query.filter(AuditEvent.created_at < before)
+
+    total = query.count()
+    events = query.order_by(AuditEvent.created_at.desc()).offset(offset).limit(limit).all()
+    return events, total
+
+
+def get_stats(
+    session: Session,
+    api_key_id: str,
+    *,
+    after: datetime | None = None,
+    before: datetime | None = None,
+) -> dict:
+    """Compute aggregate statistics for events."""
+    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)
+    if after is not None:
+        query = query.filter(AuditEvent.created_at > after)
+    if before is not None:
+        query = query.filter(AuditEvent.created_at < before)
+
+    total_events = query.count()
+
+    risk_rows = (
+        session.query(AuditEvent.risk_level, func.count())
+        .filter(AuditEvent.api_key_id == api_key_id)
+    )
+    if after is not None:
+        risk_rows = risk_rows.filter(AuditEvent.created_at > after)
+    if before is not None:
+        risk_rows = risk_rows.filter(AuditEvent.created_at < before)
+    risk_rows = risk_rows.group_by(AuditEvent.risk_level).all()
+    by_risk_level = {level: 0 for level in ("low", "medium", "high", "critical")}
+    for level, count in risk_rows:
+        if level in by_risk_level:
+            by_risk_level[level] = count
+
+    action_rows = (
+        session.query(AuditEvent.action, func.count())
+        .filter(AuditEvent.api_key_id == api_key_id)
+    )
+    if after is not None:
+        action_rows = action_rows.filter(AuditEvent.created_at > after)
+    if before is not None:
+        action_rows = action_rows.filter(AuditEvent.created_at < before)
+    action_rows = action_rows.group_by(AuditEvent.action).all()
+    by_action = {act: count for act, count in action_rows}
+
+    pii_events = query.filter(AuditEvent.pii_detected.is_(True)).count()
+
+    unique_agents_q = (
+        session.query(func.count(func.distinct(AuditEvent.agent_id)))
+        .filter(AuditEvent.api_key_id == api_key_id)
+    )
+    if after is not None:
+        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at > after)
+    if before is not None:
+        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at < before)
+    unique_agents = unique_agents_q.scalar() or 0
+
+    unique_sessions_q = (
+        session.query(
+            func.count(func.distinct(text("context->>'session_id'")))
+        )
+        .filter(AuditEvent.api_key_id == api_key_id)
+    )
+    if after is not None:
+        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at > after)
+    if before is not None:
+        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at < before)
+    unique_sessions = unique_sessions_q.scalar() or 0
+
+    return {
+        "total_events": total_events,
+        "by_risk_level": by_risk_level,
+        "by_action": by_action,
+        "pii_events": pii_events,
+        "unique_agents": unique_agents,
+        "unique_sessions": unique_sessions,
+    }
