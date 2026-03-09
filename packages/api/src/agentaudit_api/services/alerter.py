@@ -1,8 +1,9 @@
-"""Slack alert service: evaluates alert_rules against events and fires webhooks."""
+"""Slack alert service: evaluates alert rules and fires webhooks."""
 
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import httpx
 
@@ -10,12 +11,17 @@ from agentaudit_api.services.risk_scorer import RISK_LEVELS
 
 logger = logging.getLogger(__name__)
 
-_RISK_ORDER = {level: i for i, level in enumerate(RISK_LEVELS)}
+_RISK_ORDER: dict[str, int] = {level: i for i, level in enumerate(RISK_LEVELS)}
 
 
-def _matches_rule(rule: dict, event: dict) -> bool:
-    """Check if an event matches all conditions in an alert rule (AND logic)."""
-    condition = rule.get("condition", {})
+def _matches_rule(rule: dict[str, Any], event: dict[str, Any]) -> bool:
+    """Check if an event matches all conditions in an alert rule (AND logic).
+
+    Args:
+        rule: Alert rule with ``condition`` and ``notify`` keys.
+        event: Serialized audit event.
+    """
+    condition: dict[str, Any] = rule.get("condition", {})
     if not condition:
         return False
 
@@ -35,13 +41,16 @@ def _matches_rule(rule: dict, event: dict) -> bool:
     if "pii_detected" in condition and event.get("pii_detected") != condition["pii_detected"]:
         return False
 
-    return not (
-        "agent_id_eq" in condition and event.get("agent_id") != condition["agent_id_eq"]
-    )
+    return not ("agent_id_eq" in condition and event.get("agent_id") != condition["agent_id_eq"])
 
 
-def _build_slack_payload(rule: dict, event: dict) -> dict:
-    """Build the Slack webhook JSON payload."""
+def _build_slack_payload(rule: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
+    """Build the Slack webhook JSON payload.
+
+    Args:
+        rule: The matched alert rule.
+        event: The audit event that triggered the alert.
+    """
     rule_name = rule.get("name", "Unnamed rule")
     risk_level = event.get("risk_level", "unknown")
     agent_id = event.get("agent_id", "unknown")
@@ -50,14 +59,14 @@ def _build_slack_payload(rule: dict, event: dict) -> dict:
     created_at = event.get("created_at", "unknown")
 
     return {
-        "text": f"⚠️ AgentAudit Alert: {rule_name}",
+        "text": f"AgentAudit Alert: {rule_name}",
         "blocks": [
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
                     "text": (
-                        f"*⚠️ {risk_level} risk action detected*\n"
+                        f"*{risk_level} risk action detected*\n"
                         f"*Agent:* {agent_id}\n"
                         f"*Action:* {action}\n"
                         f"*Risk:* {risk_level}\n"
@@ -70,16 +79,20 @@ def _build_slack_payload(rule: dict, event: dict) -> dict:
     }
 
 
-def evaluate_and_send(alert_rules: list[dict], event: dict) -> None:
+def evaluate_and_send(alert_rules: list[dict[str, Any]], event: dict[str, Any]) -> None:
     """Evaluate alert rules against an event and send matching Slack webhooks.
 
     This is meant to be called from FastAPI BackgroundTasks (fire-and-forget).
+
+    Args:
+        alert_rules: List of alert rule dicts from the org policy.
+        event: Serialized audit event dict.
     """
     for rule in alert_rules:
         if not _matches_rule(rule, event):
             continue
 
-        webhook_url = rule.get("notify", {}).get("slack_webhook_url")
+        webhook_url: str | None = rule.get("notify", {}).get("slack_webhook_url")
         if not webhook_url:
             continue
 
@@ -88,5 +101,6 @@ def evaluate_and_send(alert_rules: list[dict], event: dict) -> None:
             with httpx.Client(timeout=10) as client:
                 resp = client.post(webhook_url, json=payload)
                 resp.raise_for_status()
+                logger.info("Slack alert sent for rule '%s'", rule.get("name"))
         except Exception:
             logger.exception("Failed to send Slack alert for rule '%s'", rule.get("name"))

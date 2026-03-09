@@ -2,23 +2,32 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 
 def map_frameworks(
     action: str,
     risk_level: str,
     pii_detected: bool,
     reasoning: str | None,
-    context: dict,
+    context: dict[str, Any],
     agent_id: str,
-    enabled_frameworks: dict,
-) -> dict:
+    enabled_frameworks: dict[str, bool],
+) -> dict[str, list[str]]:
     """Map an event to relevant compliance framework articles.
 
     Args:
-        enabled_frameworks: {"gdpr": True, "ai_act": True, "soc2": False}
+        action: The action type.
+        risk_level: Computed risk level.
+        pii_detected: Whether PII was found.
+        reasoning: Optional agent reasoning.
+        context: Event context metadata.
+        agent_id: The agent identifier.
+        enabled_frameworks: Which frameworks are enabled, e.g.
+            ``{"gdpr": True, "ai_act": True, "soc2": False}``.
 
     Returns:
-        {"gdpr": ["art_30", ...], "ai_act": [...], "soc2": [...]}
+        Mapping of framework name to list of article identifiers.
     """
     result: dict[str, list[str]] = {}
 
@@ -44,8 +53,9 @@ def _map_gdpr(
     action: str,
     pii_detected: bool,
     reasoning: str | None,
-    context: dict,
+    context: dict[str, Any],
 ) -> list[str]:
+    """Map event attributes to GDPR articles."""
     articles: list[str] = []
 
     if pii_detected:
@@ -71,6 +81,7 @@ def _map_ai_act(
     risk_level: str,
     reasoning: str | None,
 ) -> list[str]:
+    """Map event attributes to AI Act articles."""
     articles: list[str] = []
 
     if agent_id:
@@ -90,6 +101,7 @@ def _map_soc2(
     risk_level: str,
     pii_detected: bool,
 ) -> list[str]:
+    """Map event attributes to SOC 2 controls."""
     controls: list[str] = []
 
     if action in ("shell_command", "file_write"):

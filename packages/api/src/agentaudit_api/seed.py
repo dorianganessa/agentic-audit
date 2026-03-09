@@ -1,5 +1,9 @@
 """Seed script: creates a default organization and API key if none exist."""
 
+from __future__ import annotations
+
+import logging
+
 from sqlalchemy.orm import Session
 
 from agentaudit_api.database import get_engine
@@ -11,13 +15,16 @@ from agentaudit_api.models.api_key import (
 )
 from agentaudit_api.models.organization import Organization
 
+logger = logging.getLogger(__name__)
 
-def seed():
+
+def seed() -> None:
+    """Create the default organization and API key if none exist."""
     engine = get_engine()
     with Session(engine) as session:
         existing = session.query(ApiKey).first()
         if existing is not None:
-            print("API key already exists, skipping seed.")  # noqa: T201
+            logger.info("API key already exists, skipping seed.")
             return
 
         org = Organization(name="Default")
@@ -33,6 +40,7 @@ def seed():
         )
         session.add(api_key)
         session.commit()
+        # Print the key only once during initial setup
         print(f"Default API key: {raw_key}")  # noqa: T201
 
 

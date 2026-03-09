@@ -46,9 +46,7 @@ def test_dashboard_timeline_filter_risk(client, api_key_raw):
     )
 
     # Request with HX-Request header (HTMX partial)
-    resp = client.get(
-        "/dashboard?risk_level=high", headers={"HX-Request": "true"}
-    )
+    resp = client.get("/dashboard?risk_level=high", headers={"HX-Request": "true"})
     assert resp.status_code == 200
     # Should only contain high-risk events
     assert "high" in resp.text

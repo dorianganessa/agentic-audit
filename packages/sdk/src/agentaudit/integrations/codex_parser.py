@@ -7,6 +7,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 from agentaudit.client import AgentAudit
 
@@ -23,8 +24,13 @@ _TOOL_MAP: dict[str, str] = {
 
 
 class CodexTranscriptParser:
-    """Background process that tails Codex session transcripts
-    and forwards events to AgentAudit."""
+    """Background process that tails Codex session transcripts and forwards events to AgentAudit.
+
+    Usage::
+
+        parser = CodexTranscriptParser(api_key="aa_live_xxx")
+        parser.start()  # blocks until stopped
+    """
 
     def __init__(
         self,
@@ -33,7 +39,7 @@ class CodexTranscriptParser:
         codex_home: str = "~/.codex",
         agent_id: str = "codex",
         poll_interval: float = 1.0,
-    ):
+    ) -> None:
         self.audit = AgentAudit(api_key=api_key, base_url=base_url)
         self.codex_home = Path(codex_home).expanduser()
         self.agent_id = agent_id
@@ -41,17 +47,21 @@ class CodexTranscriptParser:
         self._running = False
         self._file_offsets: dict[Path, int] = {}
 
-    def parse_entry(self, entry: dict) -> dict | None:
+    def parse_entry(self, entry: dict[str, Any]) -> dict[str, Any] | None:
         """Map a Codex transcript entry to an AuditEvent create payload.
 
-        Returns None if the entry is not a loggable tool call.
+        Args:
+            entry: A single line parsed from a Codex JSONL transcript.
+
+        Returns:
+            Event payload dict, or None if the entry is not a loggable tool call.
         """
         entry_type = entry.get("type", "")
 
         # Handle tool call entries
         if entry_type in ("tool_call", "function_call"):
             tool_name = entry.get("name", entry.get("tool", ""))
-            args = entry.get("arguments", entry.get("args", entry.get("input", {})))
+            args: dict[str, Any] = entry.get("arguments", entry.get("args", entry.get("input", {})))
             if isinstance(args, str):
                 try:
                     args = json.loads(args)
@@ -62,7 +72,7 @@ class CodexTranscriptParser:
             data = _extract_data(action, tool_name, args)
             session_id = entry.get("session_id")
 
-            context: dict = {"tool": "codex"}
+            context: dict[str, str] = {"tool": "codex"}
             if session_id:
                 context["session_id"] = session_id
 
@@ -93,7 +103,7 @@ class CodexTranscriptParser:
                     if not line:
                         continue
                     try:
-                        entry = json.loads(line)
+                        entry: dict[str, Any] = json.loads(line)
                     except json.JSONDecodeError:
                         continue
                     payload = self.parse_entry(entry)
@@ -127,7 +137,7 @@ class CodexTranscriptParser:
         self._running = False
 
 
-def _extract_data(action: str, tool_name: str, args: dict) -> dict:
+def _extract_data(action: str, tool_name: str, args: dict[str, Any]) -> dict[str, Any]:
     """Extract relevant data fields based on the action type."""
     if action == "shell_command":
         return {

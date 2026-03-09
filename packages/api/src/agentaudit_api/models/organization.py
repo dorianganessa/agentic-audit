@@ -1,11 +1,16 @@
+"""Organization model and policy schema."""
+
+from __future__ import annotations
+
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field, SQLModel
 from ulid import ULID
 
-DEFAULT_POLICY = {
+DEFAULT_POLICY: dict[str, Any] = {
     "logging_level": "standard",
     "frameworks": {"gdpr": True, "ai_act": True, "soc2": False},
     "alert_rules": [],
@@ -13,16 +18,18 @@ DEFAULT_POLICY = {
 }
 
 
-def generate_ulid() -> str:
+def _generate_ulid() -> str:
     return str(ULID())
 
 
 class Organization(SQLModel, table=True):
+    """Organization with associated compliance policy."""
+
     __tablename__ = "organizations"
 
-    id: str = Field(default_factory=generate_ulid, primary_key=True)
-    name: str
-    policy: dict = Field(
+    id: str = Field(default_factory=_generate_ulid, primary_key=True)
+    name: str = Field(max_length=255)
+    policy: dict[str, Any] = Field(
         default_factory=lambda: {**DEFAULT_POLICY},
         sa_column=Column(JSON, nullable=False),
     )
@@ -31,9 +38,9 @@ class Organization(SQLModel, table=True):
 
 
 class PolicyUpdate(SQLModel):
-    """Schema for updating organization policy."""
+    """Schema for partial policy updates."""
 
     logging_level: str | None = None
-    frameworks: dict | None = None
-    alert_rules: list | None = None
-    blocking_rules: dict | None = None
+    frameworks: dict[str, Any] | None = None
+    alert_rules: list[dict[str, Any]] | None = None
+    blocking_rules: dict[str, Any] | None = None

@@ -1,28 +1,48 @@
+"""Core event processing: creation, querying, and policy enforcement."""
+
 from __future__ import annotations
 
-from datetime import datetime
+import logging
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-from agentaudit_api.models.event import AuditEvent, AuditEventCreate, AuditEventRead, generate_ulid
+from agentaudit_api.models.event import (
+    AuditEvent,
+    AuditEventCreate,
+    AuditEventRead,
+)
 from agentaudit_api.models.organization import DEFAULT_POLICY, Organization
 from agentaudit_api.services.framework_mapper import map_frameworks
 from agentaudit_api.services.pii_detector import detect_pii
 from agentaudit_api.services.risk_scorer import RISK_LEVELS, score_risk
 
+logger = logging.getLogger(__name__)
 
-def _get_policy(session: Session, org_id: str | None) -> dict:
-    """Get the policy for an org, or the default."""
+
+def _get_policy(session: Session, org_id: str | None) -> dict[str, Any]:
+    """Get the policy for an org, falling back to the default."""
     if org_id:
-        org = session.query(Organization).filter(Organization.id == org_id).first()
+        org = (
+            session.query(Organization)
+            .filter(Organization.id == org_id)  # type: ignore[arg-type]
+            .first()
+        )
         if org:
-            return org.policy
+            return dict(org.policy)
     return {**DEFAULT_POLICY}
 
 
 def _should_store(logging_level: str, risk_level: str, pii_detected: bool) -> bool:
-    """Decide whether to persist the event based on logging level."""
+    """Decide whether to persist the event based on logging level.
+
+    Args:
+        logging_level: One of minimal, standard, full, paranoid.
+        risk_level: Computed risk level of the event.
+        pii_detected: Whether PII was found in the event.
+    """
     if logging_level == "minimal":
         return pii_detected
     if logging_level == "standard":
@@ -31,15 +51,19 @@ def _should_store(logging_level: str, risk_level: str, pii_detected: bool) -> bo
     return True
 
 
-def _should_block(policy: dict, risk_level: str) -> tuple[bool, str | None]:
-    """Decide whether to block the action (paranoid mode only)."""
+def _should_block(policy: dict[str, Any], risk_level: str) -> tuple[bool, str | None]:
+    """Decide whether to block the action (paranoid mode only).
+
+    Returns:
+        A tuple of (blocked, reason). If not blocked, reason is None.
+    """
     logging_level = policy.get("logging_level", "standard")
     blocking_rules = policy.get("blocking_rules", {})
 
     if logging_level != "paranoid" or not blocking_rules.get("enabled", False):
         return False, None
 
-    block_on = blocking_rules.get("block_on", "critical")
+    block_on: str = blocking_rules.get("block_on", "critical")
     risk_order = {level: i for i, level in enumerate(RISK_LEVELS)}
     event_risk = risk_order.get(risk_level, 0)
     threshold_risk = risk_order.get(block_on, 3)
@@ -55,10 +79,22 @@ def create_event(
     api_key_id: str,
     org_id: str | None = None,
 ) -> AuditEventRead:
-    """Create a new audit event with PII detection, risk scoring, and policy enforcement."""
+    """Create a new audit event with PII detection, risk scoring, and policy enforcement.
+
+    Args:
+        session: Database session.
+        event_data: The event payload from the client.
+        api_key_id: ID of the API key used for authentication.
+        org_id: Optional organization ID for policy lookup.
+
+    Returns:
+        The processed event with risk level, PII, frameworks, and decision populated.
+    """
     policy = _get_policy(session, org_id)
-    logging_level = policy.get("logging_level", "standard")
-    enabled_frameworks = policy.get("frameworks", {"gdpr": True, "ai_act": True, "soc2": False})
+    logging_level: str = policy.get("logging_level", "standard")
+    enabled_frameworks: dict[str, bool] = policy.get(
+        "frameworks", {"gdpr": True, "ai_act": True, "soc2": False}
+    )
 
     # PII detection
     pii_result = detect_pii(event_data.data, event_data.context)
@@ -107,9 +143,10 @@ def create_event(
         session.refresh(event)
         result = AuditEventRead.model_validate(event)
     else:
-        # Build a response without persisting
+        from agentaudit_api.models.event import _generate_ulid
+
         result = AuditEventRead(
-            id=generate_ulid(),
+            id=_generate_ulid(),
             agent_id=event_data.agent_id,
             action=event_data.action,
             data=event_data.data,
@@ -119,20 +156,40 @@ def create_event(
             pii_fields=pii_result.fields,
             risk_level=risk_level,
             frameworks=frameworks,
-            created_at=datetime.now(),
+            created_at=datetime.now(UTC),
         )
 
     result.stored = stored
     result.decision = decision
     result.reason = reason
+
+    logger.info(
+        "Event %s: action=%s risk=%s pii=%s decision=%s stored=%s",
+        result.id,
+        result.action,
+        risk_level,
+        pii_result.detected,
+        decision,
+        stored,
+    )
+
     return result
 
 
 def get_event(session: Session, event_id: str, api_key_id: str) -> AuditEvent | None:
-    """Get a single event by ID, scoped to the API key."""
+    """Get a single event by ID, scoped to the API key.
+
+    Args:
+        session: Database session.
+        event_id: The event ULID.
+        api_key_id: The API key ID for access control.
+    """
     return (
         session.query(AuditEvent)
-        .filter(AuditEvent.id == event_id, AuditEvent.api_key_id == api_key_id)
+        .filter(
+            AuditEvent.id == event_id,  # type: ignore[arg-type]
+            AuditEvent.api_key_id == api_key_id,  # type: ignore[arg-type]
+        )
         .first()
     )
 
@@ -151,28 +208,35 @@ def list_events(
     limit: int = 50,
     offset: int = 0,
 ) -> tuple[list[AuditEvent], int]:
-    """List events with filtering. Returns (events, total_count)."""
-    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)
+    """List events with filtering and pagination.
+
+    Returns:
+        A tuple of (events, total_count).
+    """
+    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
 
     if agent_id is not None:
-        query = query.filter(AuditEvent.agent_id == agent_id)
+        query = query.filter(AuditEvent.agent_id == agent_id)  # type: ignore[arg-type]
     if action is not None:
-        query = query.filter(AuditEvent.action == action)
+        query = query.filter(AuditEvent.action == action)  # type: ignore[arg-type]
     if risk_level is not None:
-        query = query.filter(AuditEvent.risk_level == risk_level)
+        query = query.filter(AuditEvent.risk_level == risk_level)  # type: ignore[arg-type]
     if pii_detected is not None:
-        query = query.filter(AuditEvent.pii_detected == pii_detected)
+        query = query.filter(AuditEvent.pii_detected == pii_detected)  # type: ignore[arg-type]
     if session_id is not None:
-        query = query.filter(
-            text("context->>'session_id' = :sid").bindparams(sid=session_id)
-        )
+        query = query.filter(text("context->>'session_id' = :sid").bindparams(sid=session_id))
     if after is not None:
-        query = query.filter(AuditEvent.created_at > after)
+        query = query.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
     if before is not None:
-        query = query.filter(AuditEvent.created_at < before)
+        query = query.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
 
-    total = query.count()
-    events = query.order_by(AuditEvent.created_at.desc()).offset(offset).limit(limit).all()
+    total: int = query.count()
+    events: list[AuditEvent] = (
+        query.order_by(AuditEvent.created_at.desc())  # type: ignore[attr-defined]
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     return events, total
 
 
@@ -182,64 +246,63 @@ def get_stats(
     *,
     after: datetime | None = None,
     before: datetime | None = None,
-) -> dict:
-    """Compute aggregate statistics for events."""
-    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)
+) -> dict[str, Any]:
+    """Compute aggregate statistics for events.
+
+    Returns:
+        Dictionary with total_events, by_risk_level, by_action, pii_events,
+        unique_agents, and unique_sessions counts.
+    """
+    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
     if after is not None:
-        query = query.filter(AuditEvent.created_at > after)
+        query = query.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
     if before is not None:
-        query = query.filter(AuditEvent.created_at < before)
+        query = query.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
 
-    total_events = query.count()
+    total_events: int = query.count()
 
-    risk_rows = (
-        session.query(AuditEvent.risk_level, func.count())
-        .filter(AuditEvent.api_key_id == api_key_id)
+    risk_rows = session.query(AuditEvent.risk_level, func.count()).filter(  # type: ignore[call-overload]
+        AuditEvent.api_key_id == api_key_id
     )
     if after is not None:
         risk_rows = risk_rows.filter(AuditEvent.created_at > after)
     if before is not None:
         risk_rows = risk_rows.filter(AuditEvent.created_at < before)
     risk_rows = risk_rows.group_by(AuditEvent.risk_level).all()
-    by_risk_level = {level: 0 for level in ("low", "medium", "high", "critical")}
+    by_risk_level: dict[str, int] = {level: 0 for level in ("low", "medium", "high", "critical")}
     for level, count in risk_rows:
         if level in by_risk_level:
             by_risk_level[level] = count
 
-    action_rows = (
-        session.query(AuditEvent.action, func.count())
-        .filter(AuditEvent.api_key_id == api_key_id)
+    action_rows = session.query(AuditEvent.action, func.count()).filter(  # type: ignore[call-overload]
+        AuditEvent.api_key_id == api_key_id
     )
     if after is not None:
         action_rows = action_rows.filter(AuditEvent.created_at > after)
     if before is not None:
         action_rows = action_rows.filter(AuditEvent.created_at < before)
     action_rows = action_rows.group_by(AuditEvent.action).all()
-    by_action = {act: count for act, count in action_rows}
+    by_action: dict[str, int] = {act: count for act, count in action_rows}
 
-    pii_events = query.filter(AuditEvent.pii_detected.is_(True)).count()
+    pii_events: int = query.filter(AuditEvent.pii_detected.is_(True)).count()  # type: ignore[attr-defined]
 
-    unique_agents_q = (
-        session.query(func.count(func.distinct(AuditEvent.agent_id)))
-        .filter(AuditEvent.api_key_id == api_key_id)
+    unique_agents_q = session.query(func.count(func.distinct(AuditEvent.agent_id))).filter(
+        AuditEvent.api_key_id == api_key_id  # type: ignore[arg-type]
     )
     if after is not None:
-        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at > after)
+        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
     if before is not None:
-        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at < before)
-    unique_agents = unique_agents_q.scalar() or 0
+        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
+    unique_agents: int = unique_agents_q.scalar() or 0
 
-    unique_sessions_q = (
-        session.query(
-            func.count(func.distinct(text("context->>'session_id'")))
-        )
-        .filter(AuditEvent.api_key_id == api_key_id)
-    )
+    unique_sessions_q = session.query(
+        func.count(func.distinct(text("context->>'session_id'")))
+    ).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
     if after is not None:
-        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at > after)
+        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
     if before is not None:
-        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at < before)
-    unique_sessions = unique_sessions_q.scalar() or 0
+        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
+    unique_sessions: int = unique_sessions_q.scalar() or 0
 
     return {
         "total_events": total_events,

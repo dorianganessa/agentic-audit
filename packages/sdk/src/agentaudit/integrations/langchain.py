@@ -30,7 +30,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
         base_url: str = "http://localhost:8000",
         agent_id: str = "langchain-agent",
         log_llm_calls: bool = False,
-    ):
+    ) -> None:
         super().__init__()
         self.audit = AgentAudit(api_key=api_key, base_url=base_url)
         self.agent_id = agent_id
@@ -127,12 +127,12 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
             logger.exception("Failed to log llm_call to AgentAudit")
 
 
-def _safe_serialize(obj: Any, max_len: int = 2000) -> dict:
+def _safe_serialize(obj: Any, max_len: int = 2000) -> dict[str, str]:
     """Safely serialize inputs, truncating large values."""
     if not isinstance(obj, dict):
         s = str(obj)
         return {"value": s[:max_len] + "..." if len(s) > max_len else s}
-    result = {}
+    result: dict[str, str] = {}
     for k, v in obj.items():
         s = str(v)
         result[str(k)] = s[:max_len] + "..." if len(s) > max_len else s
