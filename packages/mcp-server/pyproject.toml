@@ -1,5 +1,5 @@
 [project]
-name = "agentaudit-mcp"
+name = "agent-audit-mcp"
 version = "0.1.0"
 description = "MCP server for AgentAudit — lets AI agents query their own compliance audit trail"
 readme = "README.md"
@@ -20,7 +20,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "agentaudit>=0.1.0",
+    "agent-audit>=0.1.0",
     "mcp[cli]>=1.0",
 ]
 

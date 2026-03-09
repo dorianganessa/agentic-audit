@@ -7,7 +7,7 @@ Agents can review their recent actions, check risk summaries, and dry-run risk c
 ## Install
 
 ```bash
-pip install agentaudit-mcp
+pip install agent-audit-mcp
 ```
 
 Or run directly:
