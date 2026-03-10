@@ -28,7 +28,7 @@ Each action is classified for risk (low/medium/high/critical), checked for PII, 
 
 In Claude Code or Cowork:
 ```
-/plugin install github:adrianosanges/agentaudit --path plugins/cowork
+/plugin install github:dorianganessa/agentic-audit --path plugins/cowork
 ```
 
 ### For enterprise admins

@@ -45,7 +45,7 @@ uvx agentic-audit-mcp
 ## Links
 
 - [Documentation](https://docs.agentaudit.dev)
-- [GitHub](https://github.com/dorianganessa/agentaudit)
+- [GitHub](https://github.com/dorianganessa/agentic-audit)
 
 ## License
 

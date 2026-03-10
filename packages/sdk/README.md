@@ -52,7 +52,7 @@ async with AsyncAgentAudit(api_key="aa_live_xxxxx") as audit:
 ## Links
 
 - [Documentation](https://docs.agentaudit.dev)
-- [GitHub](https://github.com/dorianganessa/agentaudit)
+- [GitHub](https://github.com/dorianganessa/agentic-audit)
 - [Quickstart](https://docs.agentaudit.dev/getting-started/quickstart/)
 
 ## License

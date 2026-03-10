@@ -30,7 +30,7 @@ agentaudit-hook = "agentaudit_hook.cli:main"
 [project.urls]
 Homepage = "https://agentaudit.dev"
 Documentation = "https://docs.agentaudit.dev/integrations/claude-code"
-Repository = "https://github.com/dorianganessa/agentaudit"
+Repository = "https://github.com/dorianganessa/agentic-audit"
 
 [build-system]
 requires = ["hatchling"]
