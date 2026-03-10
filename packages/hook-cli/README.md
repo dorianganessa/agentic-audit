@@ -58,7 +58,7 @@ export AGENTAUDIT_BASE_URL="http://localhost:8000"
 
 - [Claude Code integration guide](https://docs.agentaudit.dev/integrations/claude-code/)
 - [Cowork integration guide](https://docs.agentaudit.dev/integrations/cowork/)
-- [GitHub](https://github.com/dorianganessa/agentaudit)
+- [GitHub](https://github.com/dorianganessa/agentic-audit)
 
 ## License
 

@@ -33,9 +33,9 @@ agentaudit-codex-watch = "agentaudit.integrations.codex_parser:watch_codex"
 [project.urls]
 Homepage = "https://agentaudit.dev"
 Documentation = "https://docs.agentaudit.dev"
-Repository = "https://github.com/dorianganessa/agentaudit"
-Issues = "https://github.com/dorianganessa/agentaudit/issues"
-Changelog = "https://github.com/dorianganessa/agentaudit/blob/main/CHANGELOG.md"
+Repository = "https://github.com/dorianganessa/agentic-audit"
+Issues = "https://github.com/dorianganessa/agentic-audit/issues"
+Changelog = "https://github.com/dorianganessa/agentic-audit/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]

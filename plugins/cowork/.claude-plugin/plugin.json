@@ -2,5 +2,5 @@
   "name": "agentaudit",
   "description": "Compliance monitoring for Cowork — automatically logs, classifies, and audits every action. Maps to GDPR, AI Act, and SOC 2. Open source.",
   "version": "0.1.0",
-  "homepage": "https://github.com/adrianosanges/agentaudit"
+  "homepage": "https://github.com/dorianganessa/agentic-audit"
 }

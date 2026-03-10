@@ -3,8 +3,8 @@ site_url: https://docs.agentaudit.dev
 site_dir: site_docs
 site_description: "Open-source compliance monitoring for AI agents. Auto PII detection, risk scoring, GDPR / AI Act / SOC 2 mapping."
 site_author: Adriano Sanges
-repo_url: https://github.com/dorianganessa/agentaudit
-repo_name: dorianganessa/agentaudit
+repo_url: https://github.com/dorianganessa/agentic-audit
+repo_name: dorianganessa/agentic-audit
 edit_uri: edit/main/docs/
 
 theme:
@@ -42,7 +42,7 @@ extra_css:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/dorianganessa/agentaudit
+      link: https://github.com/dorianganessa/agentic-audit
   homepage: https://agentaudit.dev
 
 markdown_extensions:

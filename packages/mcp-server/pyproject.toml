@@ -30,7 +30,7 @@ agentaudit-mcp = "agentaudit_mcp.server:main"
 [project.urls]
 Homepage = "https://agentaudit.dev"
 Documentation = "https://docs.agentaudit.dev"
-Repository = "https://github.com/dorianganessa/agentaudit"
+Repository = "https://github.com/dorianganessa/agentic-audit"
 
 [build-system]
 requires = ["hatchling"]

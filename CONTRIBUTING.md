@@ -8,8 +8,8 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ```bash
 # Clone the repo
-git clone https://github.com/adrianosanges/agentaudit.git
-cd agentaudit
+git clone https://github.com/dorianganessa/agentic-audit.git
+cd agentic-audit
 
 # Install dependencies
 uv sync

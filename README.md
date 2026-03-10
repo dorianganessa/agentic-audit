@@ -170,7 +170,7 @@ In **paranoid** mode with blocking enabled, `agentaudit-hook pre` exits with cod
 Install the AgentAudit plugin in Claude Cowork to audit every knowledge worker action — connector access (Google Drive, Salesforce, DocuSign), file operations, web browsing, and sub-agent coordination.
 
 ```
-/plugin install github:adrianosanges/agentaudit --path plugins/cowork
+/plugin install github:dorianganessa/agentic-audit --path plugins/cowork
 ```
 
 The plugin uses the same `agentaudit-hook` CLI. MCP connector calls (e.g., `mcp__google_drive__read_file`) are automatically mapped to `connector_access` events with connector and operation metadata.

@@ -7,8 +7,8 @@ AgentAudit runs as a FastAPI application backed by PostgreSQL. The simplest way 
 ## Quick Start
 
 ```bash
-git clone https://github.com/dorianganessa/agentaudit.git
-cd agentaudit
+git clone https://github.com/dorianganessa/agentic-audit.git
+cd agentic-audit
 cp .env.example .env
 docker compose up -d
 ```

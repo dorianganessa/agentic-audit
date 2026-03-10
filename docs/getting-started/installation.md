@@ -9,8 +9,8 @@ The fastest way to get the full stack — API server, dashboard, and PostgreSQL.
 **Prerequisites:** Docker and Docker Compose installed.
 
 ```bash
-git clone https://github.com/dorianganessa/agentaudit.git
-cd agentaudit
+git clone https://github.com/dorianganessa/agentic-audit.git
+cd agentic-audit
 docker compose up -d
 ```
 
@@ -69,8 +69,8 @@ agentaudit-api
 **Prerequisites:** Python 3.12+, [uv](https://docs.astral.sh/uv/)
 
 ```bash
-git clone https://github.com/dorianganessa/agentaudit.git
-cd agentaudit
+git clone https://github.com/dorianganessa/agentic-audit.git
+cd agentic-audit
 uv sync
 ```
 

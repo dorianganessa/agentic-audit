@@ -5,8 +5,8 @@ AgentAudit ships with a Docker Compose configuration for both development and pr
 ## Quick start
 
 ```bash
-git clone https://github.com/dorianganessa/agentaudit.git
-cd agentaudit
+git clone https://github.com/dorianganessa/agentic-audit.git
+cd agentic-audit
 docker compose up -d
 ```
 

@@ -21,7 +21,7 @@ export AGENTAUDIT_BASE_URL="http://localhost:8000"
 ## Install the plugin
 
 ```bash
-/plugin install github:dorianganessa/agentaudit --path plugins/cowork
+/plugin install github:dorianganessa/agentic-audit --path plugins/cowork
 ```
 
 The plugin registers four hooks automatically:
