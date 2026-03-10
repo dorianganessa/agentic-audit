@@ -2,7 +2,7 @@
 
 ## Overview
 
-AgentAudit runs as a FastAPI application backed by PostgreSQL. The simplest way to deploy is with Docker Compose.
+AgenticAudit runs as a FastAPI application backed by PostgreSQL. The simplest way to deploy is with Docker Compose.
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ The default `docker-compose.yml` includes:
 
 | Service | Image              | Port | Description          |
 |---------|--------------------|------|----------------------|
-| `api`   | Built from source  | 8000 | AgentAudit API       |
+| `api`   | Built from source  | 8000 | AgenticAudit API       |
 | `db`    | postgres:16-alpine | 5432 | PostgreSQL database  |
 
 ### Startup sequence

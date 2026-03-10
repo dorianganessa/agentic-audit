@@ -1,8 +1,8 @@
 # Quickstart
 
-Get AgentAudit running and log your first event in under 5 minutes.
+Get AgenticAudit running and log your first event in under 5 minutes.
 
-## 1. Start AgentAudit
+## 1. Start AgenticAudit
 
 ```bash
 git clone https://github.com/dorianganessa/agentic-audit.git

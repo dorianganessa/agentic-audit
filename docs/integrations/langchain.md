@@ -1,6 +1,6 @@
 # LangChain Integration
 
-AgentAudit provides a LangChain callback handler that logs tool calls, chain starts, and agent actions as audit events.
+AgenticAudit provides a LangChain callback handler that logs tool calls, chain starts, and agent actions as audit events.
 
 ## Installation
 
@@ -32,13 +32,13 @@ result = agent.invoke({"input": "Find customer orders for user@example.com"})
 
 ## What gets captured
 
-| LangChain Event | AgentAudit Action | Data |
+| LangChain Event | AgenticAudit Action | Data |
 |---|---|---|
 | `on_tool_start` | Tool name (e.g., `sql_query`) | Tool input |
 | `on_tool_end` | Tool name + `_result` | Tool output |
 | `on_chain_start` | `chain_start` | Chain name, inputs |
 
-Each event goes through the full AgentAudit pipeline: PII detection, risk scoring, and framework mapping.
+Each event goes through the full AgenticAudit pipeline: PII detection, risk scoring, and framework mapping.
 
 ## Example: SQL agent with audit trail
 

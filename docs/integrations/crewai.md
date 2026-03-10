@@ -1,6 +1,6 @@
 # CrewAI Integration
 
-AgentAudit integrates with CrewAI via event hooks, capturing every tool call and agent action across your crew.
+AgenticAudit integrates with CrewAI via event hooks, capturing every tool call and agent action across your crew.
 
 ## Installation
 
@@ -10,7 +10,7 @@ pip install agentic-audit
 
 ## Setup
 
-Register the AgentAudit event hook with your CrewAI crew:
+Register the AgenticAudit event hook with your CrewAI crew:
 
 ```python
 from crewai import Crew, Agent, Task
@@ -32,18 +32,18 @@ result = crew.kickoff()
 
 ## What gets captured
 
-| CrewAI Event | AgentAudit Action | Data |
+| CrewAI Event | AgenticAudit Action | Data |
 |---|---|---|
 | Tool execution | Tool name | Tool input, agent name |
 | Agent delegation | `agent_delegation` | From agent, to agent, task |
 | Task start | `task_start` | Task description, assigned agent |
 | Task end | `task_end` | Task output, status |
 
-Each event is processed through the standard AgentAudit pipeline — PII detection, risk scoring, and framework mapping happen automatically.
+Each event is processed through the standard AgenticAudit pipeline — PII detection, risk scoring, and framework mapping happen automatically.
 
 ## Multi-agent visibility
 
-CrewAI crews involve multiple agents collaborating. AgentAudit tags each event with the originating `agent_id`, so you can:
+CrewAI crews involve multiple agents collaborating. AgenticAudit tags each event with the originating `agent_id`, so you can:
 
 - Track which agent accessed what data
 - See delegation chains in the dashboard timeline

@@ -1,15 +1,15 @@
 # Codex Integration
 
-AgentAudit provides partial support for OpenAI Codex through transcript parsing.
+AgenticAudit provides partial support for OpenAI Codex through transcript parsing.
 
 !!! warning "Partial support"
     Codex does not currently offer pre/post execution hooks or a callback system.
-    AgentAudit integration relies on parsing session transcripts after the fact.
+    AgenticAudit integration relies on parsing session transcripts after the fact.
     This means **real-time blocking is not available** for Codex.
 
 ## How it works
 
-AgentAudit provides a transcript parser that processes Codex session logs and extracts tool calls, converting them into audit events.
+AgenticAudit provides a transcript parser that processes Codex session logs and extracts tool calls, converting them into audit events.
 
 ```python
 from agentaudit.integrations.codex import parse_codex_transcript
@@ -27,7 +27,7 @@ for event in events:
 
 ## What gets captured
 
-| Codex Action | AgentAudit Action | Notes |
+| Codex Action | AgenticAudit Action | Notes |
 |---|---|---|
 | Shell commands | `shell_command` | Extracted from transcript |
 | File writes | `file_write` | Detected from apply patches |
@@ -50,7 +50,7 @@ Run the parser on a schedule to continuously ingest Codex sessions:
 
 ## The path forward
 
-We are tracking the Codex governance hooks proposal. When Codex adds native hook support, AgentAudit will provide a real-time integration similar to the [Claude Code integration](claude-code.md).
+We are tracking the Codex governance hooks proposal. When Codex adds native hook support, AgenticAudit will provide a real-time integration similar to the [Claude Code integration](claude-code.md).
 
 ## Next steps
 

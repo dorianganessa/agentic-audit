@@ -2,7 +2,7 @@
 
 ## Overview
 
-AgentAudit provides a LangChain callback handler that automatically logs tool calls, chain executions, and optionally LLM calls to the audit trail.
+AgenticAudit provides a LangChain callback handler that automatically logs tool calls, chain executions, and optionally LLM calls to the audit trail.
 
 ## Setup
 
@@ -30,7 +30,7 @@ agent.invoke({"input": "..."}, config={"callbacks": [handler]})
 
 ## What Gets Logged
 
-| LangChain Event    | AgentAudit Action | When                        | Logged by Default |
+| LangChain Event    | AgenticAudit Action | When                        | Logged by Default |
 |--------------------|-------------------|-----------------------------|-------------------|
 | `on_tool_start`    | `tool_use`        | Tool is invoked             | Yes               |
 | `on_tool_end`      | `tool_result`     | Tool returns output         | Yes               |
@@ -43,8 +43,8 @@ Tool outputs are truncated to 4,000 characters to avoid excessive payload sizes.
 
 | Parameter       | Default              | Description                              |
 |-----------------|----------------------|------------------------------------------|
-| `api_key`       | `$AGENTAUDIT_API_KEY`| AgentAudit API key                       |
-| `base_url`      | `http://localhost:8000` | AgentAudit API URL                    |
+| `api_key`       | `$AGENTAUDIT_API_KEY`| AgenticAudit API key                       |
+| `base_url`      | `http://localhost:8000` | AgenticAudit API URL                    |
 | `agent_id`      | `langchain-agent`    | Agent identifier in events               |
 | `log_llm_calls` | `False`              | Whether to log LLM invocations           |
 

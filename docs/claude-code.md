@@ -2,13 +2,13 @@
 
 ## Overview
 
-AgentAudit integrates with Claude Code through deterministic hooks. Every tool call — shell commands, file reads/writes, web fetches — is captured, classified for risk, checked for PII, and mapped to compliance frameworks in real time.
+AgenticAudit integrates with Claude Code through deterministic hooks. Every tool call — shell commands, file reads/writes, web fetches — is captured, classified for risk, checked for PII, and mapped to compliance frameworks in real time.
 
 ## How it works
 
 Claude Code fires hook events at four points:
 
-| Hook Event     | When it fires                    | What AgentAudit does                              |
+| Hook Event     | When it fires                    | What AgenticAudit does                              |
 |----------------|----------------------------------|---------------------------------------------------|
 | `PreToolUse`   | Before a tool executes           | Risk check; block if paranoid policy triggers      |
 | `PostToolUse`  | After a tool completes           | Log event with full context and tool output        |
@@ -69,7 +69,7 @@ export AGENTAUDIT_BASE_URL="http://localhost:8000"
 
 ## Tool Mapping
 
-| Claude Code Tool | AgentAudit Action  | Data Extracted                     |
+| Claude Code Tool | AgenticAudit Action  | Data Extracted                     |
 |------------------|--------------------|------------------------------------|
 | `Bash`           | `shell_command`    | command, working_dir, exit_code    |
 | `Write`          | `file_write`       | file_path                          |
@@ -98,4 +98,4 @@ Configure blocking in the policy:
 
 ## Offline Buffering
 
-If the AgentAudit API is unreachable, events are buffered locally to `~/.agentaudit/buffer.jsonl`. They can be replayed when connectivity is restored.
+If the AgenticAudit API is unreachable, events are buffered locally to `~/.agentaudit/buffer.jsonl`. They can be replayed when connectivity is restored.

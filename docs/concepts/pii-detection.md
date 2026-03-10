@@ -1,6 +1,6 @@
 # PII Detection
 
-AgentAudit automatically scans every event's `data` and `context` fields for personally identifiable information (PII). Detection runs server-side, synchronously, with zero external dependencies.
+AgenticAudit automatically scans every event's `data` and `context` fields for personally identifiable information (PII). Detection runs server-side, synchronously, with zero external dependencies.
 
 ## How it works
 

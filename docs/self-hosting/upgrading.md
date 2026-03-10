@@ -1,6 +1,6 @@
 # Upgrading
 
-How to update AgentAudit to a new version.
+How to update AgenticAudit to a new version.
 
 ## Docker Compose
 

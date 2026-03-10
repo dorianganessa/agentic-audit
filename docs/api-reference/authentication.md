@@ -1,6 +1,6 @@
 # Authentication
 
-All AgentAudit API requests require authentication via an API key.
+All AgenticAudit API requests require authentication via an API key.
 
 ## API key format
 

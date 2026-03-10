@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "AgentAudit",
+    "title": "AgenticAudit",
     "description": "Log, classify and audit AI agent actions for GDPR/AI Act/SOC2 compliance",
     "version": "0.1.0"
   },

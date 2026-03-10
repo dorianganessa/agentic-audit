@@ -1,6 +1,6 @@
 # REST API Integration
 
-Use the REST API to integrate AgentAudit with any agent, framework, or custom application.
+Use the REST API to integrate AgenticAudit with any agent, framework, or custom application.
 
 ## Authentication
 

@@ -1,6 +1,6 @@
 # Hooks Architecture
 
-AgentAudit uses deterministic hooks — not MCP, not system prompts — to capture agent actions. This page explains why, and how the hook system works.
+AgenticAudit uses deterministic hooks — not MCP, not system prompts — to capture agent actions. This page explains why, and how the hook system works.
 
 ## Why hooks, not MCP
 
@@ -20,7 +20,7 @@ Hooks are fundamentally different:
 | **Blocking** | Can prevent tool execution (exit code 2) | Cannot block other tools |
 | **Visibility** | Invisible to the LLM | Part of the conversation |
 
-!!! tip "AgentAudit also has an MCP server"
+!!! tip "AgenticAudit also has an MCP server"
     The [MCP server](../integrations/rest-api.md) exists for a different purpose: **agent self-awareness**.
     It lets the agent query its own audit trail and check risk levels.
     It does not replace hooks for logging — both serve complementary roles.
@@ -38,7 +38,7 @@ Here's what happens when Claude Code or Cowork calls a tool:
        │     │
        │     ├─ Reads tool context from stdin (JSON)
        │     ├─ Maps tool_name to action (e.g., Bash → shell_command)
-       │     ├─ Sends event to AgentAudit API
+       │     ├─ Sends event to AgenticAudit API
        │     ├─ API returns: risk_level, pii_detected, decision
        │     │
        │     ├─ If decision == "allow" → exit code 0
@@ -103,7 +103,7 @@ This identity data appears in the dashboard **User** column, making it possible 
 
 ## Tool-to-action mapping
 
-The hook CLI's mapper translates Claude Code tool names to AgentAudit actions:
+The hook CLI's mapper translates Claude Code tool names to AgenticAudit actions:
 
 | Tool Name | Action | Data Keys |
 |---|---|---|
@@ -143,7 +143,7 @@ Because hooks run as external shell processes:
 3. They don't appear in the context window
 4. The LLM has no knowledge of their existence
 
-This means adding AgentAudit to Claude Code costs exactly **zero additional tokens per session**. The audit layer is completely transparent to the LLM.
+This means adding AgenticAudit to Claude Code costs exactly **zero additional tokens per session**. The audit layer is completely transparent to the LLM.
 
 ## Exit codes
 

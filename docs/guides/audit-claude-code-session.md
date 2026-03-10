@@ -4,7 +4,7 @@ This guide walks you through auditing a complete Claude Code session — from se
 
 ## Prerequisites
 
-- AgentAudit running locally (`docker compose up -d`)
+- AgenticAudit running locally (`docker compose up -d`)
 - `agentaudit-hook` CLI installed (`pip install agentic-audit`)
 - API key from `docker compose logs api | grep "Default API key"`
 

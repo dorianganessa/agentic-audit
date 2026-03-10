@@ -1,10 +1,10 @@
 # Enterprise Deployment
 
-Deploy AgentAudit across your organization with enforced hooks, per-team policies, and centralized monitoring.
+Deploy AgenticAudit across your organization with enforced hooks, per-team policies, and centralized monitoring.
 
 ## Claude Code enterprise hooks
 
-Claude Code supports enterprise policy settings that cannot be overridden by developers. Push the AgentAudit hooks at the enterprise level:
+Claude Code supports enterprise policy settings that cannot be overridden by developers. Push the AgenticAudit hooks at the enterprise level:
 
 ```json title="Enterprise Claude Code policy"
 {
@@ -121,7 +121,7 @@ Create separate API keys for each team to:
 
 ### Infrastructure
 
-For production, deploy AgentAudit behind a load balancer with:
+For production, deploy AgenticAudit behind a load balancer with:
 
 - **Managed PostgreSQL** (e.g., AWS RDS, Neon) instead of the Docker Compose default
 - **TLS termination** at the load balancer

@@ -1,24 +1,24 @@
 # Cowork Integration
 
-AgentAudit captures every Cowork action — connector access, file operations, web browsing, sub-agent spawning — with full compliance classification.
+AgenticAudit captures every Cowork action — connector access, file operations, web browsing, sub-agent spawning — with full compliance classification.
 
-!!! note "Why Cowork needs AgentAudit"
+!!! note "Why Cowork needs AgenticAudit"
     Anthropic explicitly states: *"Cowork activity is not captured in Audit Logs,
     Compliance API, or Data Exports. Do not use Cowork for regulated workloads."*
-    AgentAudit fills this gap.
+    AgenticAudit fills this gap.
 
 ## How it works
 
-Cowork sends events via **OpenTelemetry (OTLP)** — the standard observability protocol. AgentAudit provides a native OTLP-compatible endpoint that receives these events, maps them to audit records, and runs them through the full compliance pipeline (PII detection, risk scoring, framework mapping).
+Cowork sends events via **OpenTelemetry (OTLP)** — the standard observability protocol. AgenticAudit provides a native OTLP-compatible endpoint that receives these events, maps them to audit records, and runs them through the full compliance pipeline (PII detection, risk scoring, framework mapping).
 
-No plugins or CLI tools needed. Just point Cowork's OTLP endpoint to AgentAudit.
+No plugins or CLI tools needed. Just point Cowork's OTLP endpoint to AgenticAudit.
 
 ## Setup
 
 ### 1. Prerequisites
 
-- AgentAudit API running ([quickstart](../getting-started/quickstart.md))
-- Your AgentAudit API key
+- AgenticAudit API running ([quickstart](../getting-started/quickstart.md))
+- Your AgenticAudit API key
 
 ### 2. Configure Cowork's OTLP endpoint
 
@@ -30,23 +30,23 @@ In your Cowork organization settings:
 | **Protocol** | `http/json` |
 | **Headers** | `Authorization=Bearer aa_live_xxxxx` |
 
-That's it. Every Cowork action is now captured by AgentAudit.
+That's it. Every Cowork action is now captured by AgenticAudit.
 
 !!! tip "Cloud deployment"
-    For production, use your public AgentAudit URL:
+    For production, use your public AgenticAudit URL:
     `https://your-agentaudit.example.com/v1/otlp`
 
 ### 3. Verify it works
 
 1. Open Cowork and perform any action (use a connector, read a file, browse the web)
-2. Check the AgentAudit dashboard at `http://localhost:8000/dashboard`
+2. Check the AgenticAudit dashboard at `http://localhost:8000/dashboard`
 3. Events should appear in real time with risk levels and compliance tags
 
 ## What gets captured
 
-Cowork sends 5 event types via OTLP. AgentAudit maps each to the appropriate audit action:
+Cowork sends 5 event types via OTLP. AgenticAudit maps each to the appropriate audit action:
 
-| Cowork Event | AgentAudit Action | Description |
+| Cowork Event | AgenticAudit Action | Description |
 |---|---|---|
 | `cowork.tool_result` | `connector_access` / `file_read` / `shell_command` / etc. | Tool execution results — auto-mapped by tool name |
 | `cowork.tool_decision` | `tool_decision` | Agent's decision to use a tool |
@@ -58,7 +58,7 @@ Cowork sends 5 event types via OTLP. AgentAudit maps each to the appropriate aud
 
 For `cowork.tool_result` events, the tool name determines the audit action:
 
-| Tool | AgentAudit Action |
+| Tool | AgenticAudit Action |
 |---|---|
 | `Read`, `Glob`, `Grep` | `file_read` |
 | `Write`, `Edit` | `file_write` |
@@ -96,7 +96,7 @@ MCP connector tools (e.g., `mcp__google_drive__read_file`) are automatically par
 
 ## OTLP protocol details
 
-AgentAudit accepts the standard **OTLP HTTP/JSON** format:
+AgenticAudit accepts the standard **OTLP HTTP/JSON** format:
 
 - **Endpoint**: `POST /v1/otlp/v1/logs`
 - **Content-Type**: `application/json`
@@ -146,7 +146,7 @@ Standard risk rules apply, plus Cowork-specific patterns are detected:
 
 For organizations deploying Cowork at scale:
 
-1. **Central OTLP endpoint**: Point all Cowork instances to a single AgentAudit deployment
+1. **Central OTLP endpoint**: Point all Cowork instances to a single AgenticAudit deployment
 2. **Per-team API keys**: Provision individual API keys so events are attributed to specific teams
 3. **Policy per team**: Set different logging levels (e.g., `paranoid` for finance, `standard` for engineering)
 4. **OTLP headers**: Distribute API keys via Cowork org settings — users don't need to configure anything

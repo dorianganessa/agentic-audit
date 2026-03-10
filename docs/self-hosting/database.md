@@ -1,6 +1,6 @@
 # Database
 
-AgentAudit uses PostgreSQL as its data store. Events are stored in an append-only event table with indexes for efficient querying.
+AgenticAudit uses PostgreSQL as its data store. Events are stored in an append-only event table with indexes for efficient querying.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ The URL uses SQLAlchemy's `psycopg2` dialect.
 
 ## Schema overview
 
-AgentAudit uses three main tables:
+AgenticAudit uses three main tables:
 
 ### audit_events
 
@@ -69,7 +69,7 @@ The core table. Append-only — events are never updated or deleted.
 
 ## Migrations
 
-AgentAudit uses Alembic for schema migrations. Migrations run automatically on API startup.
+AgenticAudit uses Alembic for schema migrations. Migrations run automatically on API startup.
 
 To run manually:
 
@@ -92,7 +92,7 @@ The `audit_events` table is append-only by design:
 
 ## Data retention
 
-AgentAudit does not automatically delete old events. For data retention:
+AgenticAudit does not automatically delete old events. For data retention:
 
 ```sql
 -- Delete events older than 1 year (run manually or via cron)
@@ -110,7 +110,7 @@ TO '/tmp/archive.csv' WITH CSV HEADER;
 
 ## Neon compatibility
 
-AgentAudit is compatible with [Neon](https://neon.tech/) serverless PostgreSQL. Use the Neon connection string directly:
+AgenticAudit is compatible with [Neon](https://neon.tech/) serverless PostgreSQL. Use the Neon connection string directly:
 
 ```bash
 AGENTAUDIT_DATABASE_URL="postgresql+psycopg2://user:pass@ep-xxx.us-east-2.aws.neon.tech/agentaudit?sslmode=require"

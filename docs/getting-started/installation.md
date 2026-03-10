@@ -1,6 +1,6 @@
 # Installation
 
-AgentAudit can be installed in three ways depending on your use case.
+AgenticAudit can be installed in three ways depending on your use case.
 
 ## Docker Compose (recommended)
 
@@ -41,7 +41,7 @@ This installs:
 - **`agentic-audit` Python SDK** — log events programmatically
 - **`agentic-audit-hook` CLI** — Claude Code and Cowork hook integration
 
-The SDK connects to a running AgentAudit API. Set the connection:
+The SDK connects to a running AgenticAudit API. Set the connection:
 
 ```bash
 export AGENTAUDIT_API_KEY="aa_live_xxxxx"

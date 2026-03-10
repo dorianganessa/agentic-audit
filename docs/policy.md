@@ -2,7 +2,7 @@
 
 ## Overview
 
-AgentAudit's policy engine controls what gets logged, which compliance frameworks are evaluated, and whether high-risk actions are blocked. Each organization has one policy, configurable via the API or dashboard.
+AgenticAudit's policy engine controls what gets logged, which compliance frameworks are evaluated, and whether high-risk actions are blocked. Each organization has one policy, configurable via the API or dashboard.
 
 ## Default Policy
 

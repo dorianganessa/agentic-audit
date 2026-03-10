@@ -4,7 +4,7 @@ All configuration is done via environment variables.
 
 ## API server
 
-These variables configure the AgentAudit API server.
+These variables configure the AgenticAudit API server.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -21,7 +21,7 @@ These variables configure the Python SDK and the `agentaudit-hook` CLI.
 | Variable | Default | Description |
 |---|---|---|
 | `AGENTAUDIT_API_KEY` | *(required)* | API key for authentication (`aa_live_` prefix) |
-| `AGENTAUDIT_BASE_URL` | `http://localhost:8000` | AgentAudit API endpoint URL |
+| `AGENTAUDIT_BASE_URL` | `http://localhost:8000` | AgenticAudit API endpoint URL |
 | `AGENTAUDIT_USER_EMAIL` | *(optional)* | User email for event attribution — appears in the dashboard User column |
 | `AGENTAUDIT_USER_ID` | *(optional)* | User ID for event attribution (e.g., employee ID, SSO ID) |
 

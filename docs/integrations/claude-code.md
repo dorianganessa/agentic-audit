@@ -1,10 +1,10 @@
 # Claude Code Integration
 
-AgentAudit integrates with Claude Code via deterministic hooks. Every tool call — file reads, writes, shell commands, web fetches — is logged, classified, and audit-ready without any token overhead.
+AgenticAudit integrates with Claude Code via deterministic hooks. Every tool call — file reads, writes, shell commands, web fetches — is logged, classified, and audit-ready without any token overhead.
 
 ## Prerequisites
 
-- AgentAudit API running ([quickstart](../getting-started/quickstart.md))
+- AgenticAudit API running ([quickstart](../getting-started/quickstart.md))
 - `agentaudit-hook` CLI installed (`pip install agentic-audit`)
 - Environment variables set:
 
@@ -76,7 +76,7 @@ Add this to your Claude Code settings file:
 
 ### Hook types explained
 
-| Hook | When it fires | What AgentAudit does |
+| Hook | When it fires | What AgenticAudit does |
 |---|---|---|
 | `PreToolUse` | Before a tool executes | Sends the event to the API. In paranoid mode, may block the action (exit code 2). |
 | `PostToolUse` | After a tool completes | Logs the outcome including exit codes and results. |
@@ -105,9 +105,9 @@ The dashboard timeline shows a **User** column with the email (or OS username as
 
 ## What gets captured
 
-The hook CLI maps every Claude Code tool to an AgentAudit action:
+The hook CLI maps every Claude Code tool to an AgenticAudit action:
 
-| Claude Code Tool | AgentAudit Action | Data Extracted |
+| Claude Code Tool | AgenticAudit Action | Data Extracted |
 |---|---|---|
 | `Bash` | `shell_command` | command, working_dir, exit_code |
 | `Write` | `file_write` | file_path |
@@ -139,7 +139,7 @@ The hooks are deterministic: every tool call triggers the hook, regardless of wh
 
 ## Local buffering
 
-If the AgentAudit API is unreachable, the hook CLI buffers events locally at `~/.agentaudit/buffer.jsonl`. Events are stored in JSON Lines format and can be replayed when the API is back online.
+If the AgenticAudit API is unreachable, the hook CLI buffers events locally at `~/.agentaudit/buffer.jsonl`. Events are stored in JSON Lines format and can be replayed when the API is back online.
 
 This ensures zero data loss even during API downtime. The hook never blocks Claude Code when the API is down — it falls through with exit code 0 (allow).
 

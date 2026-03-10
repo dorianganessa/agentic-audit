@@ -1,6 +1,6 @@
 # Risk Scoring
 
-Every event processed by AgentAudit receives a risk level: **low**, **medium**, **high**, or **critical**. The risk scorer evaluates a set of rules against the event's action, data, and context, then assigns the highest matching level.
+Every event processed by AgenticAudit receives a risk level: **low**, **medium**, **high**, or **critical**. The risk scorer evaluates a set of rules against the event's action, data, and context, then assigns the highest matching level.
 
 ## Risk levels
 

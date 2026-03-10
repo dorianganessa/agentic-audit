@@ -1,4 +1,4 @@
-site_name: AgentAudit
+site_name: AgenticAudit
 site_url: https://docs.agentaudit.dev
 site_dir: site_docs
 site_description: "Open-source compliance monitoring for AI agents. Auto PII detection, risk scoring, GDPR / AI Act / SOC 2 mapping."

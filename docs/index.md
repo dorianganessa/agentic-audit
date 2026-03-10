@@ -4,7 +4,7 @@ hide:
   - toc
 ---
 
-# AgentAudit
+# AgenticAudit
 
 **The missing audit layer for AI agents.**
 
@@ -16,7 +16,7 @@ Every action your AI agents take — logged, classified, and audit-ready. From C
 
     ---
 
-    Start AgentAudit with Docker Compose, log your first event, and see it classified.
+    Start AgenticAudit with Docker Compose, log your first event, and see it classified.
 
     [:octicons-arrow-right-24: Quickstart](getting-started/quickstart.md)
 
@@ -48,7 +48,7 @@ Every action your AI agents take — logged, classified, and audit-ready. From C
 
 ## What it does
 
-Your agent does something → AgentAudit captures it → classifies risk and detects PII → maps to GDPR, AI Act, and SOC 2 articles. Automatically.
+Your agent does something → AgenticAudit captures it → classifies risk and detects PII → maps to GDPR, AI Act, and SOC 2 articles. Automatically.
 
 ```python
 from agentaudit import AgentAudit

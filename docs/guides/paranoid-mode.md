@@ -85,7 +85,7 @@ When an action is blocked, Claude Code displays the hook's stderr output explain
 ## Fallback behavior
 
 !!! note "Fail-open by default"
-    If the AgentAudit API is unreachable, the hook CLI defaults to **allow** (exit code 0).
+    If the AgenticAudit API is unreachable, the hook CLI defaults to **allow** (exit code 0).
     This prevents the audit system from becoming a single point of failure.
     Events are buffered locally at `~/.agentaudit/buffer.jsonl` for later replay.
 

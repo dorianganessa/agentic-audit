@@ -2,9 +2,9 @@
 
 ## Overview
 
-The AgentAudit Cowork plugin monitors every action knowledge workers take in Claude Cowork — connector access, file operations, web browsing, and sub-agent coordination.
+The AgenticAudit Cowork plugin monitors every action knowledge workers take in Claude Cowork — connector access, file operations, web browsing, and sub-agent coordination.
 
-Anthropic's own audit tools (Audit Logs, Compliance API, Data Exports) do NOT capture Cowork activity. AgentAudit fills this gap.
+Anthropic's own audit tools (Audit Logs, Compliance API, Data Exports) do NOT capture Cowork activity. AgenticAudit fills this gap.
 
 ## How it works
 
@@ -12,7 +12,7 @@ The plugin installs deterministic hooks that fire on every tool call Cowork make
 
 ## Individual Setup
 
-1. Install AgentAudit (self-hosted or cloud)
+1. Install AgenticAudit (self-hosted or cloud)
 2. Install the hook CLI: `pip install agentic-audit`
 3. Set environment variables in your shell profile
 4. Install the plugin: `/plugin install github:dorianganessa/agentic-audit --path plugins/cowork`
@@ -22,9 +22,9 @@ The plugin installs deterministic hooks that fire on every tool call Cowork make
 
 Enterprise admins can deploy the plugin to all users automatically:
 
-1. Set up AgentAudit (self-hosted or cloud)
+1. Set up AgenticAudit (self-hosted or cloud)
 2. Configure your organization's policy (logging level, frameworks, alert rules)
-3. Add the AgentAudit plugin to your private plugin marketplace
+3. Add the AgenticAudit plugin to your private plugin marketplace
 4. Enable auto-install for all users (or specific teams)
 5. Distribute API keys per team (each key maps to a team policy)
 
@@ -32,7 +32,7 @@ Once deployed, every Cowork session across the organization is audited. Users do
 
 ## What gets captured
 
-| Cowork Action | AgentAudit Event Type | Example |
+| Cowork Action | AgenticAudit Event Type | Example |
 |---|---|---|
 | Read local file | file_read | Reading ~/Documents/report.docx |
 | Write local file | file_write | Creating ~/Reports/analysis.xlsx |

@@ -1,6 +1,6 @@
 # Docker Deployment
 
-AgentAudit ships with a Docker Compose configuration for both development and production use.
+AgenticAudit ships with a Docker Compose configuration for both development and production use.
 
 ## Quick start
 

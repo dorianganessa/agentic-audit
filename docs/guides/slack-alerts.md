@@ -1,6 +1,6 @@
 # Set Up Slack Alerts
 
-Get notified in Slack when AgentAudit detects high-risk events or PII exposure.
+Get notified in Slack when AgenticAudit detects high-risk events or PII exposure.
 
 ## Step 1: Create a Slack webhook
 

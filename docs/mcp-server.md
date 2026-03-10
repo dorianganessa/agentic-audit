@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AgentAudit MCP server gives AI agents self-awareness of their audit trail. Agents can query their own events, check risk summaries, and perform dry-run risk checks before executing actions.
+The AgenticAudit MCP server gives AI agents self-awareness of their audit trail. Agents can query their own events, check risk summaries, and perform dry-run risk checks before executing actions.
 
 ## Setup
 

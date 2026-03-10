@@ -2,11 +2,11 @@
 
 ## Overview
 
-AgentAudit can monitor OpenAI Codex sessions by tailing JSONL transcript files. The Codex parser watches `~/.codex/sessions/*.jsonl` for new entries and forwards tool calls to the AgentAudit API.
+AgenticAudit can monitor OpenAI Codex sessions by tailing JSONL transcript files. The Codex parser watches `~/.codex/sessions/*.jsonl` for new entries and forwards tool calls to the AgenticAudit API.
 
 ## How it works
 
-Codex writes session transcripts as JSONL files. The parser polls for new lines, extracts tool call entries, and maps them to AgentAudit events.
+Codex writes session transcripts as JSONL files. The parser polls for new lines, extracts tool call entries, and maps them to AgenticAudit events.
 
 ## Setup
 
@@ -37,7 +37,7 @@ python -c "from agentaudit.integrations.codex_parser import watch_codex; watch_c
 
 ## Tool Mapping
 
-| Codex Tool    | AgentAudit Action | Data Extracted |
+| Codex Tool    | AgenticAudit Action | Data Extracted |
 |---------------|-------------------|----------------|
 | `shell`       | `shell_command`   | command        |
 | `apply_patch` | `file_edit`       | file_path      |
@@ -51,8 +51,8 @@ The parser handles both `tool_call` and `function_call` entry types, and parses 
 
 | Parameter        | Default              | Description                          |
 |------------------|----------------------|--------------------------------------|
-| `api_key`        | `$AGENTAUDIT_API_KEY`| AgentAudit API key                   |
-| `base_url`       | `$AGENTAUDIT_BASE_URL`| AgentAudit API URL                 |
+| `api_key`        | `$AGENTAUDIT_API_KEY`| AgenticAudit API key                   |
+| `base_url`       | `$AGENTAUDIT_BASE_URL`| AgenticAudit API URL                 |
 | `codex_home`     | `~/.codex`           | Codex home directory                 |
 | `agent_id`       | `codex`              | Agent identifier in events           |
 | `poll_interval`  | `1.0`                | Seconds between file scans           |

@@ -1,6 +1,6 @@
 # Policy System
 
-The policy system controls what AgentAudit logs, stores, alerts on, and blocks. Each organization has one policy, configurable via the API or dashboard.
+The policy system controls what AgenticAudit logs, stores, alerts on, and blocks. Each organization has one policy, configurable via the API or dashboard.
 
 ## Default policy
 

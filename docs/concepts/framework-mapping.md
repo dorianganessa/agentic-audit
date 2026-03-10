@@ -1,6 +1,6 @@
 # Framework Mapping
 
-AgentAudit automatically maps each event to relevant articles from compliance frameworks: **GDPR**, **EU AI Act**, and **SOC 2**. Mapping is based on the event's action, risk level, PII detection, and context.
+AgenticAudit automatically maps each event to relevant articles from compliance frameworks: **GDPR**, **EU AI Act**, and **SOC 2**. Mapping is based on the event's action, risk level, PII detection, and context.
 
 ## How it works
 
