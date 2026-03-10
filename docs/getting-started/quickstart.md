@@ -101,14 +101,29 @@ Set environment variables:
 ```bash
 export AGENTAUDIT_API_KEY="aa_live_xxxxx"
 export AGENTAUDIT_BASE_URL="http://localhost:8000"
+
+# Optional: user identity for the dashboard
+export AGENTAUDIT_USER_EMAIL="you@company.com"
 ```
 
-Now every Claude Code action is logged automatically. See the [Claude Code integration guide](../integrations/claude-code.md) for details.
+Now every Claude Code action is logged automatically with your identity. See the [Claude Code integration guide](../integrations/claude-code.md) for details.
+
+## 5. Connect Cowork (optional)
+
+If you use Cowork, configure the OTLP endpoint in your organization settings:
+
+| Setting | Value |
+|---|---|
+| **OTLP Endpoint** | `http://localhost:8000/v1/otlp` |
+| **Protocol** | `http/json` |
+| **Headers** | `Authorization=Bearer aa_live_xxxxx` |
+
+Every Cowork action is now captured — connectors, file operations, web browsing. See the [Cowork integration guide](../integrations/cowork.md) for details.
 
 ## Next steps
 
 - [Installation options](installation.md) — pip, Docker, from source
 - [Configuration reference](configuration.md) — all environment variables
 - [Claude Code integration](../integrations/claude-code.md) — full setup guide
-- [Cowork integration](../integrations/cowork.md) — plugin for knowledge workers
+- [Cowork integration](../integrations/cowork.md) — native OTLP integration
 - [Policy system](../concepts/policy-system.md) — configure logging levels

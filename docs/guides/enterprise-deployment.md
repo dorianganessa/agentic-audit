@@ -62,29 +62,43 @@ Claude Code supports enterprise policy settings that cannot be overridden by dev
     by individual developers. Every Claude Code session in your organization
     is automatically audited.
 
-## Cowork plugin deployment
+## Cowork OTLP integration
 
-For Cowork, publish the AgentAudit plugin to your organization's private marketplace:
+Cowork sends events via OpenTelemetry (OTLP). Configure it in your Cowork organization settings:
 
-1. Fork the plugin from `plugins/cowork/`
-2. Configure your organization's API endpoint and key provisioning
-3. Publish to your private plugin marketplace
-4. Enable auto-install for all users
+| Setting | Value |
+|---|---|
+| **OTLP Endpoint** | `https://audit.internal.company.com/v1/otlp` |
+| **Protocol** | `http/json` |
+| **Headers** | `Authorization=Bearer aa_live_xxxxx` |
+
+This is an org-level setting — every Cowork user in the organization is automatically covered. No per-user setup required.
+
+See [Cowork integration](../integrations/cowork.md) for details.
 
 ## Environment provisioning
 
-Each developer needs two environment variables. Distribute them via your configuration management:
+Each developer needs these environment variables for Claude Code hooks. Distribute them via your configuration management:
 
 ```bash
 AGENTAUDIT_API_KEY="aa_live_xxxxx"      # Per-user or per-team key
 AGENTAUDIT_BASE_URL="https://audit.internal.company.com"  # Your deployment URL
+
+# User identity (recommended for compliance attribution)
+AGENTAUDIT_USER_EMAIL="alice@company.com"  # Shows in dashboard User column
+AGENTAUDIT_USER_ID="emp-12345"             # Optional: internal employee ID
 ```
+
+!!! tip "Automatic identity fallback"
+    Even without `AGENTAUDIT_USER_EMAIL`, the hook CLI captures the **OS username** and
+    **hostname** automatically. The explicit env vars provide cleaner attribution in the
+    dashboard and compliance reports.
 
 Options for provisioning:
 
 - **dotfiles management** (e.g., chezmoi) — inject into shell profile
 - **MDM** (e.g., Jamf, Intune) — set system-level environment variables
-- **Developer portal** — self-service key generation
+- **Developer portal** — self-service key generation with email pre-filled
 
 ## Per-team API keys
 
