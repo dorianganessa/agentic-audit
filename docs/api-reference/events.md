@@ -17,7 +17,7 @@ Ingest an audit event. The event is classified (PII detection, risk scoring, fra
 | `agent_id` | `string` | Yes | Identifier for the agent (e.g., `"claude-code"`, `"booking-agent-v2"`) |
 | `action` | `string` | Yes | Action type (e.g., `"shell_command"`, `"file_write"`, `"connector_access"`) |
 | `data` | `object` | No | Action-specific data (e.g., `{"command": "ls -la"}`) |
-| `context` | `object` | No | Additional context (e.g., `{"environment": "production"}`) |
+| `context` | `object` | No | Additional context: user identity (`os_user`, `hostname`, `user_email`, `user_id`), session info, environment |
 | `reasoning` | `string` | No | Agent's reasoning for the action |
 
 ### Response (201 Created)
@@ -51,7 +51,12 @@ Ingest an audit event. The event is classified (PII detection, risk scoring, fra
         "agent_id": "claude-code",
         "action": "shell_command",
         "data": {"command": "cat /etc/passwd"},
-        "context": {"session_id": "sess_abc123"}
+        "context": {
+          "session_id": "sess_abc123",
+          "os_user": "alice",
+          "hostname": "alice-macbook",
+          "user_email": "alice@company.com"
+        }
       }'
     ```
 
@@ -65,9 +70,19 @@ Ingest an audit event. The event is classified (PII detection, risk scoring, fra
         agent_id="claude-code",
         action="shell_command",
         data={"command": "cat /etc/passwd"},
-        context={"session_id": "sess_abc123"},
+        context={
+            "session_id": "sess_abc123",
+            "os_user": "alice",
+            "hostname": "alice-macbook",
+            "user_email": "alice@company.com",
+        },
     )
     ```
+
+!!! tip "Automatic identity with hook CLI"
+    When using `agentaudit-hook`, user identity fields (`os_user`, `hostname`, and optional
+    `AGENTAUDIT_USER_EMAIL` / `AGENTAUDIT_USER_ID`) are added automatically — you don't
+    need to include them manually.
 
 ### Response example
 
@@ -77,7 +92,12 @@ Ingest an audit event. The event is classified (PII detection, risk scoring, fra
   "agent_id": "claude-code",
   "action": "shell_command",
   "data": {"command": "cat /etc/passwd"},
-  "context": {"session_id": "sess_abc123"},
+  "context": {
+    "session_id": "sess_abc123",
+    "os_user": "alice",
+    "hostname": "alice-macbook",
+    "user_email": "alice@company.com"
+  },
   "reasoning": null,
   "risk_level": "medium",
   "pii_detected": false,

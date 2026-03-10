@@ -83,12 +83,25 @@ Add this to your Claude Code settings file:
 | `SessionStart` | When a Claude Code session begins | Logs session start for timeline tracking. |
 | `SessionEnd` | When a session ends | Logs session end and triggers summary generation. |
 
+## User identity
+
+The hook CLI automatically captures **OS username** and **hostname** with every event, so you can always trace who triggered an action and from which machine.
+
+For explicit identity (recommended in enterprise), set these optional env vars:
+
+```bash
+export AGENTAUDIT_USER_EMAIL="alice@company.com"  # Shows in dashboard User column
+export AGENTAUDIT_USER_ID="emp-12345"              # Internal user ID
+```
+
+The dashboard timeline shows a **User** column with the email (or OS username as fallback). The event detail page shows the full identity including hostname.
+
 ## Verify it works
 
 1. Open Claude Code in any project
 2. Ask it to do something (e.g., "list files in the current directory")
 3. Open the dashboard at `http://localhost:8000/dashboard`
-4. Your event should appear in the timeline with a risk level badge
+4. Your event should appear in the timeline with a risk level, user, and PII badge
 
 ## What gets captured
 

@@ -57,7 +57,7 @@ Here's what happens when Claude Code or Cowork calls a tool:
 
 ## stdin JSON format
 
-Claude Code and Cowork pass tool context to hooks via stdin. The format:
+Claude Code passes tool context to hooks via stdin. The format:
 
 ### PreToolUse
 
@@ -69,7 +69,7 @@ Claude Code and Cowork pass tool context to hooks via stdin. The format:
     "description": "List files in /tmp"
   },
   "session_id": "abc123",
-  "agent_id": "claude-code"
+  "hook_event_name": "PreToolUse"
 }
 ```
 
@@ -83,9 +83,23 @@ Claude Code and Cowork pass tool context to hooks via stdin. The format:
   },
   "tool_output": "total 8\ndrwxrwxrwt  2 root root ...",
   "session_id": "abc123",
-  "agent_id": "claude-code"
+  "hook_event_name": "PostToolUse"
 }
 ```
+
+### What the hook CLI adds
+
+The hook CLI enriches every event with **user identity** before sending to the API:
+
+| Field | Source | Example |
+|---|---|---|
+| `os_user` | Auto-detected via OS | `alice` |
+| `hostname` | Auto-detected via OS | `alice-macbook` |
+| `user_email` | `AGENTAUDIT_USER_EMAIL` env var | `alice@company.com` |
+| `user_id` | `AGENTAUDIT_USER_ID` env var | `emp-12345` |
+| `session_id` | From stdin JSON | `abc123` |
+
+This identity data appears in the dashboard **User** column, making it possible to trace exactly who triggered a PII-flagged or high-risk action.
 
 ## Tool-to-action mapping
 
@@ -142,5 +156,5 @@ This means adding AgentAudit to Claude Code costs exactly **zero additional toke
 ## Next steps
 
 - [Claude Code integration](../integrations/claude-code.md) — set up hooks
-- [Cowork integration](../integrations/cowork.md) — plugin with hooks
+- [Cowork integration](../integrations/cowork.md) — native OTLP integration
 - [Policy system](policy-system.md) — configure blocking rules

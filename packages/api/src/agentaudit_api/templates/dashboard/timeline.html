@@ -3,7 +3,7 @@
 {% block content %}
 <h2 style="margin-bottom: 1rem;">Event Timeline</h2>
 
-<form class="filters" hx-get="/dashboard" hx-target="#events-table" hx-swap="innerHTML" hx-push-url="true">
+<form id="filter-form" class="filters" hx-get="/dashboard" hx-target="#events-table" hx-swap="innerHTML" hx-push-url="true">
     <div class="filter-group">
         <label>Risk Level</label>
         <select name="risk_level">
@@ -31,12 +31,18 @@
         </select>
     </div>
     <div class="filter-group">
-        <label>After</label>
-        <input type="datetime-local" name="after" value="{{ filters.after or '' }}">
-    </div>
-    <div class="filter-group">
-        <label>Before</label>
-        <input type="datetime-local" name="before" value="{{ filters.before or '' }}">
+        <label>Date Range</label>
+        <div class="date-range-row">
+            <input type="text" id="date-after" name="after" value="{{ filters.after or '' }}" placeholder="From">
+            <span class="date-sep">→</span>
+            <input type="text" id="date-before" name="before" value="{{ filters.before or '' }}" placeholder="To">
+            <div class="range-presets">
+                <button type="button" data-range="24h">24h</button>
+                <button type="button" data-range="7d">7d</button>
+                <button type="button" data-range="30d">30d</button>
+                <button type="button" data-range="all">All</button>
+            </div>
+        </div>
     </div>
     <div class="filter-group">
         <label>&nbsp;</label>
@@ -47,4 +53,88 @@
 <div id="events-table">
 {% include "dashboard/_events_rows.html" %}
 </div>
+
+<script>
+(function() {
+    var fpOpts = {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "Y-m-dTH:i:S",
+        altInput: true,
+        altFormat: "M j, Y H:i",
+        theme: "dark",
+        allowInput: true,
+    };
+
+    var fpAfter = flatpickr("#date-after", Object.assign({}, fpOpts, {
+        placeholder: "From",
+        onChange: function(dates) {
+            if (dates.length && fpBefore._input) {
+                fpBefore.set("minDate", dates[0]);
+            }
+            clearPresetActive();
+        }
+    }));
+
+    var fpBefore = flatpickr("#date-before", Object.assign({}, fpOpts, {
+        placeholder: "To",
+        onChange: function(dates) {
+            if (dates.length && fpAfter._input) {
+                fpAfter.set("maxDate", dates[0]);
+            }
+            clearPresetActive();
+        }
+    }));
+
+    function clearPresetActive() {
+        document.querySelectorAll(".range-presets button").forEach(function(b) {
+            b.classList.remove("active-preset");
+        });
+    }
+
+    function setRange(range) {
+        var now = new Date();
+        var after = null;
+
+        if (range === "24h") {
+            after = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        } else if (range === "7d") {
+            after = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        } else if (range === "30d") {
+            after = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        } else {
+            fpAfter.clear();
+            fpBefore.clear();
+            fpAfter.set("maxDate", null);
+            fpBefore.set("minDate", null);
+            clearPresetActive();
+            document.querySelector('[data-range="all"]').classList.add("active-preset");
+            htmx.trigger("#filter-form", "submit");
+            return;
+        }
+
+        fpAfter.setDate(after, true);
+        fpBefore.setDate(now, true);
+        fpAfter.set("maxDate", now);
+        fpBefore.set("minDate", after);
+
+        clearPresetActive();
+        document.querySelector('[data-range="' + range + '"]').classList.add("active-preset");
+        htmx.trigger("#filter-form", "submit");
+    }
+
+    document.querySelectorAll(".range-presets button").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            setRange(this.getAttribute("data-range"));
+        });
+    });
+
+    // Set initial active preset based on current filter values
+    var currentAfter = "{{ filters.after or '' }}";
+    if (!currentAfter) {
+        document.querySelector('[data-range="all"]').classList.add("active-preset");
+    }
+})();
+</script>
 {% endblock %}

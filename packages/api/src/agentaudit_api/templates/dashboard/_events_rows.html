@@ -2,6 +2,7 @@
     <thead>
         <tr>
             <th>Time</th>
+            <th>User</th>
             <th>Agent</th>
             <th>Action</th>
             <th>Risk</th>
@@ -13,6 +14,7 @@
         {% for event in events %}
         <tr onclick="window.location='/dashboard/events/{{ event.id }}'">
             <td class="text-muted">{{ event.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td class="text-muted">{{ event.context.get('user_email', '') or event.context.get('os_user', '') or '—' }}</td>
             <td>{{ event.agent_id }}</td>
             <td>{{ event.action }}</td>
             <td><span class="badge badge-{{ event.risk_level or 'low' }}">{{ event.risk_level or 'low' }}</span></td>
@@ -21,7 +23,7 @@
         </tr>
         {% endfor %}
         {% if not events %}
-        <tr><td colspan="6" class="text-muted" style="text-align:center;padding:2rem;">No events found</td></tr>
+        <tr><td colspan="7" class="text-muted" style="text-align:center;padding:2rem;">No events found</td></tr>
         {% endif %}
     </tbody>
 </table>

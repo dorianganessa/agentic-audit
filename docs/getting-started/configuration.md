@@ -22,6 +22,14 @@ These variables configure the Python SDK and the `agentaudit-hook` CLI.
 |---|---|---|
 | `AGENTAUDIT_API_KEY` | *(required)* | API key for authentication (`aa_live_` prefix) |
 | `AGENTAUDIT_BASE_URL` | `http://localhost:8000` | AgentAudit API endpoint URL |
+| `AGENTAUDIT_USER_EMAIL` | *(optional)* | User email for event attribution — appears in the dashboard User column |
+| `AGENTAUDIT_USER_ID` | *(optional)* | User ID for event attribution (e.g., employee ID, SSO ID) |
+
+!!! tip "Automatic identity"
+    Even without setting `AGENTAUDIT_USER_EMAIL` or `AGENTAUDIT_USER_ID`, the hook CLI
+    automatically captures the **OS username** and **hostname** with every event.
+    The explicit env vars are recommended for enterprise deployments where you need
+    email-level attribution for compliance.
 
 ## Docker Compose defaults
 
@@ -57,9 +65,12 @@ For the SDK and hook CLI, add to your shell profile (`~/.zshrc`, `~/.bashrc`):
 ```bash
 export AGENTAUDIT_API_KEY="aa_live_xxxxx"
 export AGENTAUDIT_BASE_URL="http://localhost:8000"
+
+# Optional: user identity for dashboard attribution
+export AGENTAUDIT_USER_EMAIL="you@company.com"
 ```
 
-This way, every terminal session and Claude Code hook has access to the credentials.
+This way, every terminal session and Claude Code hook has access to the credentials and user identity.
 
 ## Next steps
 

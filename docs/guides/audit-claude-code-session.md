@@ -46,6 +46,9 @@ Set environment variables in your shell profile:
 ```bash
 export AGENTAUDIT_API_KEY="aa_live_xxxxx"
 export AGENTAUDIT_BASE_URL="http://localhost:8000"
+
+# Optional: explicit user identity for the dashboard
+export AGENTAUDIT_USER_EMAIL="you@company.com"
 ```
 
 ## Step 2: Run a Claude Code session
@@ -68,15 +71,18 @@ You'll see a timeline of events from your session:
 
 Each event shows:
 
-- Risk level badge (color-coded)
-- PII detection indicator
-- Mapped compliance frameworks
-- Timestamp
+- **User** — who triggered the action (email or OS username)
+- **Risk level** badge (color-coded)
+- **PII** detection indicator
+- **Decision** — allow or block
+
+Use the **date range picker** to narrow down to a specific time window, or click the **24h**, **7d**, **30d** presets for quick filtering.
 
 ## Step 4: Inspect an event
 
 Click on any event to see the full detail:
 
+- **User**: Who executed the action — email, or `os_user @ hostname` as fallback
 - **Action**: What was done (e.g., `shell_command`)
 - **Data**: The specific details (e.g., the command that was run)
 - **Risk level**: Why it was scored at that level

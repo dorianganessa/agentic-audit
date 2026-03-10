@@ -2,7 +2,42 @@
 
 from __future__ import annotations
 
+import getpass
+import os
+import socket
 from typing import Any
+
+
+def _get_user_context() -> dict[str, str]:
+    """Collect user/machine identity for event attribution.
+
+    Priority for user identity:
+      1. AGENTAUDIT_USER_EMAIL env var (explicit, enterprise-friendly)
+      2. AGENTAUDIT_USER_ID env var (explicit)
+      3. OS username (automatic fallback)
+
+    Machine identity is always included via hostname.
+    """
+    ctx: dict[str, str] = {"tool": "claude_code"}
+
+    # Machine identity
+    ctx["hostname"] = socket.gethostname()
+
+    # User identity — explicit env vars take priority
+    user_email = os.environ.get("AGENTAUDIT_USER_EMAIL", "")
+    user_id = os.environ.get("AGENTAUDIT_USER_ID", "")
+    if user_email:
+        ctx["user_email"] = user_email
+    if user_id:
+        ctx["user_id"] = user_id
+
+    # Always include OS username as fallback identity
+    try:
+        ctx["os_user"] = getpass.getuser()
+    except Exception:
+        pass
+
+    return ctx
 
 
 def map_tool_event(hook_data: dict[str, object]) -> dict[str, Any]:
@@ -25,7 +60,7 @@ def map_tool_event(hook_data: dict[str, object]) -> dict[str, Any]:
     if tool_output is not None:
         data["tool_output"] = _truncate(tool_output, max_len=4000)
 
-    context: dict[str, str] = {"tool": "claude_code"}
+    context = _get_user_context()
     if session_id:
         context["session_id"] = str(session_id)
     if hook_event_name:
@@ -50,7 +85,7 @@ def map_session_event(hook_data: dict[str, object]) -> dict[str, Any]:
 
     action = "session_start" if "Start" in hook_event_name else "session_end"
 
-    context: dict[str, str] = {"tool": "claude_code"}
+    context = _get_user_context()
     if session_id:
         context["session_id"] = str(session_id)
 

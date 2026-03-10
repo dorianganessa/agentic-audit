@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AgentAudit{% endblock %}</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         :root {
             --bg: #0d1117;
@@ -228,6 +231,62 @@
         .htmx-indicator { display: none; }
         .htmx-request .htmx-indicator { display: inline; }
         .spinner { color: var(--text-muted); font-size: 0.8125rem; }
+
+        /* Flatpickr overrides */
+        .flatpickr-calendar {
+            background: var(--bg-surface) !important;
+            border-color: var(--border) !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange,
+        .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
+            background: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+        .flatpickr-day.inRange {
+            background: rgba(88,166,255,0.15) !important;
+            border-color: transparent !important;
+            box-shadow: -5px 0 0 rgba(88,166,255,0.15), 5px 0 0 rgba(88,166,255,0.15) !important;
+        }
+
+        /* Date range row */
+        .date-range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .date-range-row input[type="text"] {
+            width: 160px;
+        }
+        .date-sep {
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+        }
+        .range-presets {
+            display: flex;
+            gap: 0.25rem;
+            margin-left: 0.25rem;
+        }
+        .range-presets button {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.25rem 0.625rem;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .range-presets button:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+        .range-presets button.active-preset {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(88,166,255,0.1);
+        }
     </style>
 </head>
 <body>
