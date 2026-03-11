@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import getpass
 import os
 import socket
@@ -32,10 +33,8 @@ def _get_user_context() -> dict[str, str]:
         ctx["user_id"] = user_id
 
     # Always include OS username as fallback identity
-    try:
+    with contextlib.suppress(Exception):
         ctx["os_user"] = getpass.getuser()
-    except Exception:
-        pass
 
     return ctx
 

@@ -186,11 +186,11 @@ async def receive_otlp_logs(
     """Receive OTLP ExportLogsServiceRequest and map to AgentAudit events."""
     try:
         body = await request.json()
-    except Exception:
+    except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Invalid JSON payload",
-        )
+        ) from exc
 
     resource_logs = body.get("resourceLogs", [])
     results: list[dict[str, Any]] = []

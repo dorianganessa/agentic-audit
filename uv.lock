@@ -119,7 +119,7 @@ requires-dist = [
 
 [[package]]
 name = "agentic-audit-hook"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/hook-cli" }
 dependencies = [
     { name = "agentic-audit" },
