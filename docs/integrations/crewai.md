@@ -1,78 +1,26 @@
 # CrewAI Integration
 
-AgenticAudit integrates with CrewAI via event hooks, capturing every tool call and agent action across your crew.
+!!! info "Roadmap"
+    CrewAI integration is on the roadmap. In the meantime, you can use the [REST API](rest-api.md) to log events from any agent framework, including CrewAI.
 
-## Installation
+## Using the REST API
 
-```bash
-pip install agentic-audit
-```
-
-## Setup
-
-Register the AgenticAudit event hook with your CrewAI crew:
+You can integrate AgenticAudit with CrewAI today by calling the REST API directly from your tool callbacks:
 
 ```python
-from crewai import Crew, Agent, Task
-from agentaudit.integrations.crewai import AgentAuditEventHook
+from agentaudit import AgentAudit
 
-audit_hook = AgentAuditEventHook(
-    api_key="aa_live_xxxxx",
-    base_url="http://localhost:8000",
+audit = AgentAudit(api_key="aa_live_xxxxx")
+
+# Log events from your CrewAI tools
+audit.log(
+    agent_id="crewai-researcher",
+    action="connector_access",
+    data={"tool_name": "search_tool", "query": "customer data"},
 )
-
-crew = Crew(
-    agents=[...],
-    tasks=[...],
-    event_hooks=[audit_hook],
-)
-
-result = crew.kickoff()
 ```
 
-## What gets captured
-
-| CrewAI Event | AgenticAudit Action | Data |
-|---|---|---|
-| Tool execution | Tool name | Tool input, agent name |
-| Agent delegation | `agent_delegation` | From agent, to agent, task |
-| Task start | `task_start` | Task description, assigned agent |
-| Task end | `task_end` | Task output, status |
-
-Each event is processed through the standard AgenticAudit pipeline — PII detection, risk scoring, and framework mapping happen automatically.
-
-## Multi-agent visibility
-
-CrewAI crews involve multiple agents collaborating. AgenticAudit tags each event with the originating `agent_id`, so you can:
-
-- Track which agent accessed what data
-- See delegation chains in the dashboard timeline
-- Filter events by specific agent within a crew
-
-## Example: research crew with compliance
-
-```python
-researcher = Agent(
-    role="Researcher",
-    goal="Find customer information",
-    tools=[search_tool, database_tool],
-)
-
-writer = Agent(
-    role="Writer",
-    goal="Draft customer report",
-    tools=[file_tool],
-)
-
-crew = Crew(
-    agents=[researcher, writer],
-    tasks=[research_task, writing_task],
-    event_hooks=[audit_hook],
-)
-
-# Every tool call by every agent is audited
-crew.kickoff()
-```
+A native CrewAI event hook integration is planned. Follow the [GitHub repo](https://github.com/dorianganessa/agentic-audit) for updates.
 
 ## Next steps
 

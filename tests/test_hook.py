@@ -203,6 +203,18 @@ def test_cli_post_creates_event(app, api_key_raw, monkeypatch):
 
     tc = TestClient(app)
 
+    # Set full logging so events are persisted and queryable
+    tc.put(
+        "/v1/org/policy",
+        json={"logging_level": "full"},
+        headers={"Authorization": f"Bearer {api_key_raw}"},
+    )
+
+    # Count events before
+    before = tc.get(
+        "/v1/events", headers={"Authorization": f"Bearer {api_key_raw}"}
+    ).json()["total"]
+
     # Patch AgentAudit to use our test client transport
     import agentaudit.client as client_mod
 
@@ -239,6 +251,15 @@ def test_cli_post_creates_event(app, api_key_raw, monkeypatch):
     with pytest.raises(SystemExit) as exc_info:
         main()
     assert exc_info.value.code == 0
+
+    # Verify the event was actually persisted
+    after_resp = tc.get(
+        "/v1/events", headers={"Authorization": f"Bearer {api_key_raw}"}
+    ).json()
+    assert after_resp["total"] == before + 1
+    latest = after_resp["events"][0]
+    assert latest["action"] == "shell_command"
+    assert latest["data"]["command"] == "ls -la"
 
 
 def test_cli_pre_api_down_buffers(monkeypatch, tmp_path):

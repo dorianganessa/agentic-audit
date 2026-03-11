@@ -82,6 +82,34 @@ def _parse_tool_parameters(raw: str | dict[str, Any] | None) -> dict[str, Any]:
         return {"raw": raw}
 
 
+# Fields to hoist from tool_parameters to top-level data, keyed by action.
+_HOIST_MAP: dict[str, list[str]] = {
+    "shell_command": ["command", "working_dir"],
+    "file_read": ["file_path"],
+    "file_write": ["file_path"],
+    "web_browse": ["url"],
+    "web_search": ["query"],
+    "sub_agent_spawn": ["task_description"],
+}
+
+
+def _hoist_tool_fields(
+    action: str,
+    tool_params: dict[str, Any],
+    data: dict[str, Any],
+) -> None:
+    """Copy key fields from tool_parameters to top-level data.
+
+    The risk scorer checks fields like ``data["command"]`` and
+    ``data["file_path"]`` at the top level. OTLP events arrive with
+    these nested inside ``tool_parameters``, so we hoist them.
+    """
+    fields = _HOIST_MAP.get(action, [])
+    for field in fields:
+        if field in tool_params and field not in data:
+            data[field] = tool_params[field]
+
+
 def _map_log_record(
     record_attrs: dict[str, Any],
     resource_attrs: dict[str, Any],
@@ -108,8 +136,9 @@ def _map_log_record(
     data: dict[str, Any] = {}
     if tool_name:
         data["tool_name"] = tool_name
-    if record_attrs.get("tool_parameters"):
-        data["tool_parameters"] = _parse_tool_parameters(record_attrs["tool_parameters"])
+    tool_params = _parse_tool_parameters(record_attrs.get("tool_parameters"))
+    if tool_params:
+        data["tool_parameters"] = tool_params
     if record_attrs.get("success") is not None:
         data["success"] = record_attrs["success"]
     if record_attrs.get("duration_ms") is not None:
@@ -122,6 +151,10 @@ def _map_log_record(
             if len(parts) >= 3:
                 data["connector"] = parts[1]
                 data["operation"] = parts[2]
+
+    # Hoist key fields from tool_parameters to the top level of data so the
+    # risk scorer can see them (mirrors how the hook CLI mapper works).
+    _hoist_tool_fields(action, tool_params, data)
 
     # Build context
     context: dict[str, Any] = {}
