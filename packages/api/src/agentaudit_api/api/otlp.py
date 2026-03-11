@@ -66,9 +66,7 @@ def _extract_attributes(attrs: list[dict[str, Any]]) -> dict[str, Any]:
                 v.get("stringValue", v) for v in value_obj["arrayValue"].get("values", [])
             ]
         elif "kvlistValue" in value_obj:
-            result[key] = _extract_attributes(
-                value_obj["kvlistValue"].get("values", [])
-            )
+            result[key] = _extract_attributes(value_obj["kvlistValue"].get("values", []))
     return result
 
 
@@ -199,14 +197,10 @@ async def receive_otlp_logs(
     alert_rules = _get_alert_rules(session, api_key)
 
     for rl in resource_logs:
-        resource_attrs = _extract_attributes(
-            rl.get("resource", {}).get("attributes", [])
-        )
+        resource_attrs = _extract_attributes(rl.get("resource", {}).get("attributes", []))
         for scope_log in rl.get("scopeLogs", []):
             for log_record in scope_log.get("logRecords", []):
-                record_attrs = _extract_attributes(
-                    log_record.get("attributes", [])
-                )
+                record_attrs = _extract_attributes(log_record.get("attributes", []))
 
                 event_create = _map_log_record(record_attrs, resource_attrs)
                 if event_create is None:
@@ -219,12 +213,14 @@ async def receive_otlp_logs(
                         api_key_id=api_key.id,
                         org_id=api_key.org_id,
                     )
-                    results.append({
-                        "id": result.id,
-                        "action": result.action,
-                        "risk_level": result.risk_level,
-                        "stored": result.stored,
-                    })
+                    results.append(
+                        {
+                            "id": result.id,
+                            "action": result.action,
+                            "risk_level": result.risk_level,
+                            "stored": result.stored,
+                        }
+                    )
 
                     if alert_rules:
                         event_dict = result.model_dump(mode="json")
@@ -243,7 +239,9 @@ async def receive_otlp_logs(
     return {
         "partialSuccess": {
             "rejectedLogRecords": errors,
-        } if errors else None,
+        }
+        if errors
+        else None,
         "accepted": len(results),
         "events": results,
     }
