@@ -222,9 +222,8 @@ def test_scan_file_incremental(tmp_path, app, api_key_raw):
 
     # Append a new entry
     with open(transcript, "a") as f:
-        f.write(
-            json.dumps({"type": "tool_call", "name": "shell", "arguments": {"command": "second"}}) + "\n"
-        )
+        entry = {"type": "tool_call", "name": "shell", "arguments": {"command": "second"}}
+        f.write(json.dumps(entry) + "\n")
 
     parser._scan_file(transcript)
 
@@ -253,9 +252,8 @@ def test_scan_directory(tmp_path, app, api_key_raw):
     (sessions_dir / "sess1.jsonl").write_text(
         json.dumps({"type": "tool_call", "name": "shell", "arguments": {"command": "ls"}}) + "\n"
     )
-    (sessions_dir / "sess2.jsonl").write_text(
-        json.dumps({"type": "tool_call", "name": "read_file", "arguments": {"file_path": "/tmp/x"}}) + "\n"
-    )
+    entry2 = {"type": "tool_call", "name": "read_file", "arguments": {"file_path": "/tmp/x"}}
+    (sessions_dir / "sess2.jsonl").write_text(json.dumps(entry2) + "\n")
 
     parser._scan_directory()
 

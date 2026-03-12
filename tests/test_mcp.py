@@ -1,11 +1,10 @@
 """Tests for MCP server tools and risk checker."""
 
+import agentaudit_mcp.server as server_mod
 import httpx
 from agentaudit import AgentAudit
 from agentaudit_mcp.risk_checker import check_risk
 from starlette.testclient import TestClient
-
-import agentaudit_mcp.server as server_mod
 
 
 def _wire_mcp_client(app, api_key: str):
