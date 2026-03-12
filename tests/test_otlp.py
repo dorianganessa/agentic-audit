@@ -152,9 +152,7 @@ def test_otlp_user_prompt(client, api_key_raw):
 
 def test_otlp_api_request(client, api_key_raw):
     """Cowork API request event → api_request action."""
-    payload = _otlp_payload(
-        _log_record("cowork.api_request", duration_ms=150)
-    )
+    payload = _otlp_payload(_log_record("cowork.api_request", duration_ms=150))
     resp = client.post(
         "/v1/otlp/v1/logs",
         json=payload,
@@ -166,9 +164,7 @@ def test_otlp_api_request(client, api_key_raw):
 
 def test_otlp_api_error(client, api_key_raw):
     """Cowork API error event → api_error action."""
-    payload = _otlp_payload(
-        _log_record("cowork.api_error", success=False)
-    )
+    payload = _otlp_payload(_log_record("cowork.api_error", success=False))
     resp = client.post(
         "/v1/otlp/v1/logs",
         json=payload,
@@ -180,9 +176,7 @@ def test_otlp_api_error(client, api_key_raw):
 
 def test_otlp_tool_decision(client, api_key_raw):
     """Cowork tool decision event → tool_decision action."""
-    payload = _otlp_payload(
-        _log_record("cowork.tool_decision", tool_name="WebFetch")
-    )
+    payload = _otlp_payload(_log_record("cowork.tool_decision", tool_name="WebFetch"))
     resp = client.post(
         "/v1/otlp/v1/logs",
         json=payload,
@@ -203,9 +197,9 @@ def test_otlp_pii_triggers_risk(client, api_key_raw):
             "cowork.tool_result",
             **{
                 "tool_name": "mcp__salesforce__query",
-                "tool_parameters": json.dumps({
-                    "soql": "SELECT Name, Email FROM Contact WHERE Email = 'john@example.com'"
-                }),
+                "tool_parameters": json.dumps(
+                    {"soql": "SELECT Name, Email FROM Contact WHERE Email = 'john@example.com'"}
+                ),
                 "mcp_server_scope": "salesforce",
                 "success": True,
             },
@@ -237,9 +231,9 @@ def test_otlp_dangerous_command_high_risk(client, api_key_raw):
             "cowork.tool_result",
             **{
                 "tool_name": "Bash",
-                "tool_parameters": json.dumps({
-                    "command": "psql -h prod-db.internal -c 'SELECT * FROM users'"
-                }),
+                "tool_parameters": json.dumps(
+                    {"command": "psql -h prod-db.internal -c 'SELECT * FROM users'"}
+                ),
                 "success": True,
             },
         )

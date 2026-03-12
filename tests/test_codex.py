@@ -25,11 +25,13 @@ def _make_parser(app, api_key: str) -> CodexTranscriptParser:
 def test_parse_shell_command():
     """Shell tool_call maps to shell_command."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "arguments": {"command": "ls -la"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "arguments": {"command": "ls -la"},
+        }
+    )
     assert result is not None
     assert result["action"] == "shell_command"
     assert result["data"]["command"] == "ls -la"
@@ -40,11 +42,13 @@ def test_parse_shell_command():
 def test_parse_apply_patch():
     """apply_patch maps to file_edit."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "apply_patch",
-        "arguments": {"file_path": "/tmp/test.py"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "apply_patch",
+            "arguments": {"file_path": "/tmp/test.py"},
+        }
+    )
     assert result is not None
     assert result["action"] == "file_edit"
     assert result["data"]["file_path"] == "/tmp/test.py"
@@ -53,11 +57,13 @@ def test_parse_apply_patch():
 def test_parse_read_file():
     """read_file maps to file_read."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "read_file",
-        "arguments": {"file_path": "/etc/passwd"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "read_file",
+            "arguments": {"file_path": "/etc/passwd"},
+        }
+    )
     assert result is not None
     assert result["action"] == "file_read"
     assert result["data"]["file_path"] == "/etc/passwd"
@@ -66,11 +72,13 @@ def test_parse_read_file():
 def test_parse_write_file():
     """write_file maps to file_write."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "write_file",
-        "arguments": {"file_path": "/tmp/out.txt"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "write_file",
+            "arguments": {"file_path": "/tmp/out.txt"},
+        }
+    )
     assert result is not None
     assert result["action"] == "file_write"
 
@@ -78,11 +86,13 @@ def test_parse_write_file():
 def test_parse_function_call_type():
     """function_call type is also handled."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "function_call",
-        "name": "shell",
-        "arguments": {"command": "echo hi"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "function_call",
+            "name": "shell",
+            "arguments": {"command": "echo hi"},
+        }
+    )
     assert result is not None
     assert result["action"] == "shell_command"
 
@@ -90,11 +100,13 @@ def test_parse_function_call_type():
 def test_parse_unknown_tool():
     """Unknown tool name falls back to lowercase."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "custom_tool",
-        "arguments": {"foo": "bar"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "custom_tool",
+            "arguments": {"foo": "bar"},
+        }
+    )
     assert result is not None
     assert result["action"] == "custom_tool"
 
@@ -102,12 +114,14 @@ def test_parse_unknown_tool():
 def test_parse_with_session_id():
     """Session ID is included in context when present."""
     parser = CodexTranscriptParser(api_key="test")
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "arguments": {"command": "pwd"},
-        "session_id": "sess_codex_123",
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "arguments": {"command": "pwd"},
+            "session_id": "sess_codex_123",
+        }
+    )
     assert result is not None
     assert result["context"]["session_id"] == "sess_codex_123"
 
@@ -116,20 +130,24 @@ def test_parse_string_arguments():
     """String arguments are parsed as JSON or wrapped in raw."""
     parser = CodexTranscriptParser(api_key="test")
     # Valid JSON string
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "arguments": '{"command": "ls"}',
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "arguments": '{"command": "ls"}',
+        }
+    )
     assert result is not None
     assert result["data"]["command"] == "ls"
 
     # Non-JSON string gets wrapped in {"raw": ...}
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "arguments": "just a string",
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "arguments": "just a string",
+        }
+    )
     assert result is not None
     # The raw string becomes str({"raw": "just a string"}) via the command extraction
     assert "just a string" in str(result["data"]["command"])
@@ -147,19 +165,23 @@ def test_parse_alternate_arg_keys():
     """Handles 'args' and 'input' keys as alternatives to 'arguments'."""
     parser = CodexTranscriptParser(api_key="test")
 
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "args": {"command": "whoami"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "args": {"command": "whoami"},
+        }
+    )
     assert result is not None
     assert result["data"]["command"] == "whoami"
 
-    result = parser.parse_entry({
-        "type": "tool_call",
-        "name": "shell",
-        "input": {"command": "date"},
-    })
+    result = parser.parse_entry(
+        {
+            "type": "tool_call",
+            "name": "shell",
+            "input": {"command": "date"},
+        }
+    )
     assert result is not None
     assert result["data"]["command"] == "date"
 
