@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import sys
 
 from agentaudit import AgentAudit, AgentAuditError
 
-from agentaudit_hook.buffer import buffer_event
+from agentaudit_hook.buffer import buffer_event, flush_buffer
 from agentaudit_hook.mapper import map_session_event, map_tool_event
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ Reads JSON from stdin. Requires AGENTAUDIT_API_KEY env var.
 
 
 def main() -> None:
-    """Parse arguments, read hook JSON from stdin, and forward to AgentAudit."""
+    """Parse arguments, read hook JSON from stdin, and forward to AgenticAudit."""
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         sys.stderr.write(USAGE)
         sys.exit(0)
@@ -63,11 +64,15 @@ def main() -> None:
             sys.stderr.write(f"BLOCKED: {reason}\n")
             sys.exit(2)
 
+        # Opportunistically flush any buffered events from previous failures
+        with contextlib.suppress(Exception):
+            flush_buffer(client)
+
     except AgentAuditError as exc:
-        logger.warning("AgentAudit API error: %s", exc.message)
+        logger.warning("AgenticAudit API error: %s", exc.message)
         buffer_event(payload)
     except Exception:
-        logger.warning("AgentAudit hook error", exc_info=True)
+        logger.warning("AgenticAudit hook error", exc_info=True)
         buffer_event(payload)
 
     sys.exit(0)

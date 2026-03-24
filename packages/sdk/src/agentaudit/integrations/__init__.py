@@ -1,1 +1,1 @@
-"""AgentAudit integrations with third-party frameworks."""
+"""AgenticAudit integrations with third-party frameworks."""

@@ -1,0 +1,68 @@
+rules:
+  # --- Credential detection ---
+  - id: credential-keyword-in-action
+    name: Credential keyword in action name
+    description: Action name contains 'credential' or 'password', indicating direct credential access.
+    severity: critical
+    category: security
+    tags: [credential-access]
+
+    match:
+      any:
+        - field: action
+          contains: credential
+        - field: action
+          contains: password
+
+    effects:
+      risk_level: critical
+
+  - id: secret-patterns-in-data
+    name: Secret patterns detected in event data
+    description: >
+      Detects API keys, tokens, and password assignments in event data.
+      Covers Stripe, GitHub, AWS IAM, and generic password patterns.
+    severity: critical
+    category: security
+    tags: [secret-leak]
+
+    match:
+      any:
+        - field: data
+          matches: "sk_(live|test)_[a-zA-Z0-9]+"
+        - field: data
+          matches: "ghp_[a-zA-Z0-9]+"
+        - field: data
+          matches: "AKIA[A-Z0-9]+"
+        - field: data
+          matches: "password\\s*[:=]\\s*\\S+"
+
+    effects:
+      risk_level: critical
+
+  # --- Destructive commands ---
+  - id: destructive-shell-command
+    name: Destructive shell command
+    description: >
+      Detects rm -rf, SQL DROP, and SQL DELETE commands that could
+      cause irreversible data loss.
+    severity: critical
+    category: security
+    tags: [destructive, data-loss]
+
+    match:
+      all:
+        - field: action
+          eq: shell_command
+        - any:
+            - field: data.command
+              contains: "rm -rf"
+            - field: data.command
+              contains: "rm  -rf"
+            - field: data.command
+              contains: "DROP "
+            - field: data.command
+              contains: "DELETE FROM"
+
+    effects:
+      risk_level: critical

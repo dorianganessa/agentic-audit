@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "agentaudit": {
+      "command": "uvx",
+      "args": ["agentic-audit-mcp"],
+      "env": {
+        "AGENTAUDIT_API_KEY": "aa_live_YOUR_KEY_HERE",
+        "AGENTAUDIT_BASE_URL": "http://localhost:8000"
+      }
+    }
+  }
+}

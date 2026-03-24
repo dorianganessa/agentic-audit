@@ -1,0 +1,22 @@
+rules:
+  - id: package-install
+    name: Package manager install
+    description: Agent is installing packages via npm, pip, or uv.
+    severity: low
+    category: operational
+    tags: [package-install]
+
+    match:
+      all:
+        - field: action
+          eq: shell_command
+        - any:
+            - field: data.command
+              contains: "npm install"
+            - field: data.command
+              contains: "pip install"
+            - field: data.command
+              contains: "uv add"
+
+    effects:
+      risk_level: low

@@ -1,4 +1,4 @@
-"""LangChain callback handler that logs agent actions to AgentAudit."""
+"""LangChain callback handler that logs agent actions to AgenticAudit."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class AgentAuditCallbackHandler(BaseCallbackHandler):
-    """LangChain callback that logs agent actions to AgentAudit.
+    """LangChain callback that logs agent actions to AgenticAudit.
 
     Usage::
 
@@ -46,7 +46,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> None:
-        """Log tool invocation to AgentAudit."""
+        """Log tool invocation to AgenticAudit."""
         tool_name = serialized.get("name", "unknown_tool")
         self._run_to_tool[run_id] = tool_name
         try:
@@ -57,7 +57,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
                 context={"run_id": str(run_id), "framework": "langchain"},
             )
         except Exception:
-            logger.exception("Failed to log tool_start to AgentAudit")
+            logger.exception("Failed to log tool_start to AgenticAudit")
 
     def on_tool_end(
         self,
@@ -67,7 +67,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> None:
-        """Log tool result to AgentAudit."""
+        """Log tool result to AgenticAudit."""
         tool_name = self._run_to_tool.pop(run_id, "unknown_tool")
         try:
             output_str = str(output)
@@ -80,7 +80,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
                 context={"run_id": str(run_id), "framework": "langchain"},
             )
         except Exception:
-            logger.exception("Failed to log tool_end to AgentAudit")
+            logger.exception("Failed to log tool_end to AgenticAudit")
 
     def on_chain_start(
         self,
@@ -91,7 +91,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
         parent_run_id: UUID | None = None,
         **kwargs: Any,
     ) -> None:
-        """Log chain start to AgentAudit."""
+        """Log chain start to AgenticAudit."""
         chain_name = serialized.get("name", serialized.get("id", ["unknown"])[-1])
         try:
             self.audit.log(
@@ -101,7 +101,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
                 context={"run_id": str(run_id), "framework": "langchain"},
             )
         except Exception:
-            logger.exception("Failed to log chain_start to AgentAudit")
+            logger.exception("Failed to log chain_start to AgenticAudit")
 
     def on_llm_start(
         self,
@@ -124,7 +124,7 @@ class AgentAuditCallbackHandler(BaseCallbackHandler):
                 context={"run_id": str(run_id), "framework": "langchain"},
             )
         except Exception:
-            logger.exception("Failed to log llm_call to AgentAudit")
+            logger.exception("Failed to log llm_call to AgenticAudit")
 
 
 def _safe_serialize(obj: Any, max_len: int = 2000) -> dict[str, str]:

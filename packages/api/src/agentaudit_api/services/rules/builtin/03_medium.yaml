@@ -1,0 +1,36 @@
+rules:
+  - id: pii-detected
+    name: PII detected in event
+    description: Personal identifiable information was found in the event payload.
+    severity: medium
+    category: privacy
+    tags: [pii]
+
+    match:
+      field: pii_detected
+      eq: true
+
+    effects:
+      risk_level: medium
+      frameworks:
+        gdpr: personal_data_processing
+
+  - id: privilege-escalation
+    name: Privilege escalation command
+    description: Shell command uses sudo or chmod, potentially escalating privileges.
+    severity: medium
+    category: security
+    tags: [privilege-escalation]
+
+    match:
+      all:
+        - field: action
+          eq: shell_command
+        - any:
+            - field: data.command
+              contains: "sudo "
+            - field: data.command
+              contains: "chmod "
+
+    effects:
+      risk_level: medium

@@ -61,7 +61,15 @@ You should see a response with `risk_level`, `pii_detected`, and `frameworks` po
 
 ## 3. View the dashboard
 
-Open [http://localhost:8000/dashboard](http://localhost:8000/dashboard) in your browser. Your event should appear in the timeline with its risk level and PII badge.
+Open [http://localhost:8000/dashboard](http://localhost:8000/dashboard) in your browser. You will be redirected to the login page.
+
+!!! note "Dashboard authentication"
+    The dashboard requires login. Navigate to `/dashboard/login` and enter your API key to authenticate.
+
+    - Your session is stored as an HTTP-only cookie, valid for **7 days**
+    - To log out, visit `/dashboard/logout`
+
+Once logged in, your event should appear in the timeline with its risk level and PII badge.
 
 ## 4. Connect Claude Code (optional)
 

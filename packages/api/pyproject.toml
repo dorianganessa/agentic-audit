@@ -1,7 +1,7 @@
 [project]
 name = "agentaudit-api"
 version = "0.1.0"
-description = "AgentAudit API server"
+description = "AgenticAudit API server"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
@@ -14,7 +14,11 @@ dependencies = [
     "jinja2>=3.1.0",
     "httpx>=0.28.0",
     "fpdf2>=2.8.0",
+    "pyyaml>=6.0",
 ]
+
+[project.scripts]
+agentaudit-purge = "agentaudit_api.services.retention:_cli"
 
 [build-system]
 requires = ["hatchling"]

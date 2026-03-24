@@ -194,12 +194,16 @@ def test_buffer_event(tmp_path):
     assert len(lines) == 2
 
 
-def test_cli_post_creates_event(app, api_key_raw, monkeypatch):
+def test_cli_post_creates_event(app, api_key_raw, monkeypatch, tmp_path):
     """Hook post subcommand creates an event via the API."""
     import io
 
+    # Isolate buffer so flush_buffer doesn't pick up stale events
+    import agentaudit_hook.buffer as buf_mod
     import httpx
     from starlette.testclient import TestClient
+
+    monkeypatch.setattr(buf_mod, "DEFAULT_BUFFER_PATH", tmp_path / "buffer.jsonl")
 
     tc = TestClient(app)
 

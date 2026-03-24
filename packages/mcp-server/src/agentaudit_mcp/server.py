@@ -1,10 +1,11 @@
-"""AgentAudit MCP server — lets AI agents query their own audit trail."""
+"""AgenticAudit MCP server — lets AI agents query their own audit trail."""
 
 from __future__ import annotations
 
 import os
 from typing import Any
 
+import httpx
 from agentaudit import AgentAudit
 from mcp.server.fastmcp import FastMCP
 
@@ -13,6 +14,7 @@ from agentaudit_mcp.risk_checker import check_risk
 server = FastMCP("agentaudit")
 
 _client: AgentAudit | None = None
+_http: httpx.Client | None = None
 
 
 def _get_client() -> AgentAudit:
@@ -24,6 +26,20 @@ def _get_client() -> AgentAudit:
             base_url=os.environ.get("AGENTAUDIT_BASE_URL", "http://localhost:8000"),
         )
     return _client
+
+
+def _get_http() -> httpx.Client:
+    """Return a raw httpx client for endpoints not covered by the SDK."""
+    global _http  # noqa: PLW0603
+    if _http is None:
+        base = os.environ.get("AGENTAUDIT_BASE_URL", "http://localhost:8000").rstrip("/")
+        key = os.environ.get("AGENTAUDIT_API_KEY", "")
+        _http = httpx.Client(
+            base_url=base,
+            headers={"Authorization": f"Bearer {key}"},
+            timeout=30.0,
+        )
+    return _http
 
 
 def _session_id() -> str | None:
@@ -91,6 +107,58 @@ def check_action_risk(
     Use this before taking a potentially risky action.
     """
     return check_risk(action, data)
+
+
+@server.tool()
+def list_ai_systems() -> dict[str, Any]:
+    """List all AI systems registered for compliance tracking.
+
+    Returns systems with their risk classification, FRIA status, and contract info.
+    """
+    resp = _get_http().get("/v1/systems")
+    resp.raise_for_status()
+    data = resp.json()
+    return {
+        "systems": [
+            {
+                "id": s["id"],
+                "name": s["name"],
+                "vendor": s["vendor"],
+                "risk_classification": s["risk_classification"],
+                "annex_iii_category": s["annex_iii_category"],
+                "fria_status": s["fria_status"],
+                "contract_has_ai_annex": s["contract_has_ai_annex"],
+                "agent_id_patterns": s["agent_id_patterns"],
+                "is_active": s["is_active"],
+            }
+            for s in data["systems"]
+        ],
+        "total": data["total"],
+    }
+
+
+@server.tool()
+def get_compliance_status() -> dict[str, Any]:
+    """Get the organization's AI Act compliance status.
+
+    Returns a compliance score (0-100), individual check results,
+    a summary of system counts, and upcoming deadlines.
+    """
+    resp = _get_http().get("/v1/compliance/ai-act/status")
+    resp.raise_for_status()
+    return resp.json()  # type: ignore[no-any-return]
+
+
+@server.tool()
+def suggest_classification(system_id: str) -> dict[str, Any]:
+    """Suggest an AI Act risk classification for a system based on its event patterns.
+
+    Analyzes the system's audit events and returns a suggested risk level
+    (minimal, limited, high), Annex III category, rationale, and evidence.
+    """
+    resp = _get_http().get(f"/v1/systems/{system_id}/classification-suggestion")
+    resp.raise_for_status()
+    return resp.json()  # type: ignore[no-any-return]
 
 
 def main() -> None:

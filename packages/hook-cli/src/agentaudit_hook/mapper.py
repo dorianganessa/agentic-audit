@@ -144,7 +144,7 @@ def _map_action_data(tool_name: str, tool_input: dict[str, Any]) -> tuple[str, d
 
 
 def _map_mcp_tool(tool_name: str, tool_input: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    """Map MCP connector tool calls to AgentAudit actions.
+    """Map MCP connector tool calls to AgenticAudit actions.
 
     Parses ``mcp__<connector>__<operation>`` into a ``connector_access``
     action with connector and operation metadata.

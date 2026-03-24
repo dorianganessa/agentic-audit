@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -12,6 +13,22 @@ from agentaudit_api.services.risk_scorer import RISK_LEVELS
 logger = logging.getLogger(__name__)
 
 _RISK_ORDER: dict[str, int] = {level: i for i, level in enumerate(RISK_LEVELS)}
+
+
+ALLOWED_WEBHOOK_HOSTS = {"hooks.slack.com"}
+
+
+def _is_valid_webhook_url(url: str) -> bool:
+    """Validate that a webhook URL points to an allowed host."""
+    try:
+        parsed = urlparse(url)
+        return (
+            parsed.scheme == "https"
+            and parsed.hostname is not None
+            and parsed.hostname in ALLOWED_WEBHOOK_HOSTS
+        )
+    except Exception:
+        return False
 
 
 def _matches_rule(rule: dict[str, Any], event: dict[str, Any]) -> bool:
@@ -59,7 +76,7 @@ def _build_slack_payload(rule: dict[str, Any], event: dict[str, Any]) -> dict[st
     created_at = event.get("created_at", "unknown")
 
     return {
-        "text": f"AgentAudit Alert: {rule_name}",
+        "text": f"AgenticAudit Alert: {rule_name}",
         "blocks": [
             {
                 "type": "section",
@@ -94,6 +111,10 @@ def evaluate_and_send(alert_rules: list[dict[str, Any]], event: dict[str, Any]) 
 
         webhook_url: str | None = rule.get("notify", {}).get("slack_webhook_url")
         if not webhook_url:
+            continue
+
+        if not _is_valid_webhook_url(webhook_url):
+            logger.warning("Blocked webhook to non-allowlisted URL: %s", webhook_url[:60])
             continue
 
         payload = _build_slack_payload(rule, event)

@@ -1,4 +1,4 @@
-"""Dashboard routes: Jinja2 + HTMX web UI."""
+"""Dashboard routes: Jinja2 + HTMX web UI with cookie-based authentication."""
 
 from __future__ import annotations
 
@@ -8,18 +8,21 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query, Request, Response
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Cookie, Depends, Form, Query, Request, Response
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from agentaudit_api.config import get_settings
 from agentaudit_api.database import get_session
-from agentaudit_api.models.api_key import ApiKey
+from agentaudit_api.models.ai_system import AISystemRead
+from agentaudit_api.models.api_key import ApiKey, hash_api_key
 from agentaudit_api.models.event import AuditEvent, AuditEventRead
 from agentaudit_api.models.organization import Organization
 from agentaudit_api.services.event_service import get_event, get_stats, list_events
 from agentaudit_api.services.report_pdf import generate_pdf
+from agentaudit_api.services.system_service import list_systems
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +30,38 @@ templates = Jinja2Templates(directory=str(Path(__file__).resolve().parent.parent
 
 router = APIRouter()
 
+COOKIE_NAME = "agentaudit_session"
+COOKIE_MAX_AGE = 86400 * 7  # 7 days
 
-def _get_first_api_key(session: Session) -> ApiKey | None:
-    """Get the first active API key (dashboard uses session-less auth for now)."""
-    return session.query(ApiKey).filter(ApiKey.is_active.is_(True)).first()  # type: ignore[attr-defined]
+
+def _get_authenticated_api_key(
+    session: Session,
+    agentaudit_session: str | None = Cookie(None),
+) -> ApiKey | None:
+    """Validate the dashboard session cookie and return the API key."""
+    if not agentaudit_session:
+        return None
+    api_key = (
+        session.query(ApiKey)
+        .filter(
+            ApiKey.key_hash == agentaudit_session,  # type: ignore[arg-type]
+            ApiKey.is_active.is_(True),  # type: ignore[attr-defined]
+        )
+        .first()
+    )
+    return api_key
+
+
+def _require_auth(session: Session, request: Request) -> ApiKey | None:
+    """Check auth cookie and return the API key or None for redirect."""
+    cookie_val = request.cookies.get(COOKIE_NAME)
+    if not cookie_val:
+        return None
+    return _get_authenticated_api_key(session, cookie_val)
+
+
+def _login_redirect() -> RedirectResponse:
+    return RedirectResponse("/dashboard/login", status_code=303)
 
 
 def _time_range_to_dates(time_range: str) -> tuple[datetime | None, datetime | None]:
@@ -73,6 +104,63 @@ def _risk_explanation(event: AuditEvent) -> str | None:
     return None
 
 
+# ---------- Login / Logout ----------
+
+
+@router.get("/dashboard/login", response_class=HTMLResponse, include_in_schema=False)
+def login_page(request: Request) -> Response:
+    """Render the login form."""
+    return templates.TemplateResponse(
+        "dashboard/login.html",
+        {"request": request, "error": None, "active_page": ""},
+    )
+
+
+@router.post("/dashboard/login", response_class=HTMLResponse, include_in_schema=False)
+def login_submit(
+    request: Request,
+    api_key: str = Form(...),
+    session: Session = Depends(get_session),
+) -> Response:
+    """Validate API key and set session cookie."""
+    key_hash = hash_api_key(api_key)
+    db_key = (
+        session.query(ApiKey)
+        .filter(
+            ApiKey.key_hash == key_hash,  # type: ignore[arg-type]
+            ApiKey.is_active.is_(True),  # type: ignore[attr-defined]
+        )
+        .first()
+    )
+    if db_key is None:
+        return templates.TemplateResponse(
+            "dashboard/login.html",
+            {"request": request, "error": "Invalid API key", "active_page": ""},
+            status_code=401,
+        )
+
+    response = RedirectResponse("/dashboard", status_code=303)
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=key_hash,
+        max_age=COOKIE_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/dashboard/logout", include_in_schema=False)
+def logout() -> Response:
+    """Clear the session cookie and redirect to login."""
+    response = RedirectResponse("/dashboard/login", status_code=303)
+    response.delete_cookie(COOKIE_NAME)
+    return response
+
+
+# ---------- Protected dashboard routes ----------
+
+
 @router.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
 def timeline(
     request: Request,
@@ -87,9 +175,9 @@ def timeline(
     session: Session = Depends(get_session),
 ) -> Response:
     """Render the event timeline dashboard."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
+        return _login_redirect()
 
     pii_bool = None
     if pii_detected == "true":
@@ -155,9 +243,9 @@ def event_detail(
     session: Session = Depends(get_session),
 ) -> Response:
     """Render the event detail page."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
+        return _login_redirect()
 
     event = get_event(session, event_id, api_key.id)
     if event is None:
@@ -184,9 +272,9 @@ def policy_page(
     session: Session = Depends(get_session),
 ) -> Response:
     """Render the policy management page."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
+        return _login_redirect()
 
     org = (
         session.query(Organization)
@@ -221,9 +309,9 @@ def update_policy_form(
     block_on: str = Query("critical"),
 ) -> Response:
     """Update the policy via the dashboard form (HTMX)."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return HTMLResponse('<div class="flash flash-error">No API key configured</div>')
+        return HTMLResponse("Unauthorized", status_code=401)
 
     org = (
         session.query(Organization)
@@ -246,6 +334,87 @@ def update_policy_form(
     return HTMLResponse('<div class="flash flash-success">Policy updated successfully</div>')
 
 
+@router.get("/dashboard/compliance", response_class=HTMLResponse, include_in_schema=False)
+def compliance_page(
+    request: Request,
+    session: Session = Depends(get_session),
+) -> Response:
+    """Render the AI Act compliance dashboard."""
+    api_key = _require_auth(session, request)
+    if api_key is None:
+        return _login_redirect()
+
+    org = (
+        session.query(Organization)
+        .filter(Organization.id == api_key.org_id)  # type: ignore[arg-type]
+        .first()
+    )
+    if org is None:
+        return HTMLResponse("<h1>Organization not found</h1>", status_code=404)
+
+    systems = list_systems(session, org.id)
+    policy = dict(org.policy)
+    settings = get_settings()
+    retention = policy.get("retention_days", settings.retention_days)
+
+    high_risk = [s for s in systems if s.risk_classification == "high"]
+    classified = sum(1 for s in systems if s.risk_classification != "unclassified")
+    fria_completed = sum(1 for s in high_risk if s.fria_status == "completed")
+    contracts_ok = sum(1 for s in systems if s.contract_has_ai_annex)
+    prohibited = [s for s in systems if s.risk_classification == "prohibited"]
+
+    checks = {
+        "all_classified": len(systems) > 0 and classified == len(systems),
+        "no_prohibited": len(prohibited) == 0,
+        "fria_complete": len(high_risk) == 0 or fria_completed == len(high_risk),
+        "contracts_reviewed": len(systems) == 0 or contracts_ok == len(systems),
+        "retention_compliant": retention >= 180,
+    }
+    score = int(sum(checks.values()) / len(checks) * 100) if checks else 0
+
+    # Deadlines
+    now = datetime.now(UTC).replace(tzinfo=None)
+    deadlines: list[dict[str, Any]] = []
+    for s in systems:
+        if s.next_review_date and s.next_review_date > now:
+            deadlines.append({
+                "system": s.name,
+                "type": "system_review",
+                "date": s.next_review_date.isoformat(),
+            })
+        if s.fria_next_review and s.fria_next_review > now:
+            deadlines.append({
+                "system": s.name,
+                "type": "fria_review",
+                "date": s.fria_next_review.isoformat(),
+            })
+    deadlines.sort(key=lambda d: d["date"])
+
+    return templates.TemplateResponse(
+        "dashboard/compliance.html",
+        {
+            "request": request,
+            "score": score,
+            "checks": checks,
+            "summary": {
+                "total_systems": len(systems),
+                "classified": classified,
+                "high_risk": len(high_risk),
+                "fria_completed": fria_completed,
+                "contracts_with_annex": contracts_ok,
+                "prohibited_systems": len(prohibited),
+                "retention_days": retention,
+                "retention_compliant": retention >= 180,
+            },
+            "systems": [AISystemRead.model_validate(s) for s in systems],
+            "high_risk_systems": [AISystemRead.model_validate(s) for s in high_risk],
+            "deadlines": deadlines,
+            "compliance_preset": policy.get("compliance_preset"),
+            "active_page": "compliance",
+        },
+    )
+
+
 @router.get("/dashboard/stats", response_class=HTMLResponse, include_in_schema=False)
 def stats_page(
     request: Request,
@@ -253,9 +422,9 @@ def stats_page(
     session: Session = Depends(get_session),
 ) -> Response:
     """Render the stats overview page."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return HTMLResponse("<h1>No API key configured</h1>", status_code=500)
+        return _login_redirect()
 
     after, before = _time_range_to_dates(range)
     stats = get_stats(session, api_key.id, after=after, before=before)
@@ -296,13 +465,14 @@ def stats_page(
 
 @router.get("/dashboard/report/pdf", include_in_schema=False)
 def report_pdf(
+    request: Request,
     range: str = Query("7d"),
     session: Session = Depends(get_session),
 ) -> Response:
     """Generate and download a PDF compliance report."""
-    api_key = _get_first_api_key(session)
+    api_key = _require_auth(session, request)
     if api_key is None:
-        return Response("No API key configured", status_code=500)
+        return _login_redirect()
 
     after, before = _time_range_to_dates(range)
     stats = get_stats(session, api_key.id, after=after, before=before)

@@ -9,6 +9,9 @@ COPY packages/ packages/
 
 RUN uv sync --frozen --no-dev
 
+RUN groupadd --gid 1000 appuser && useradd --uid 1000 --gid appuser --no-create-home appuser
+USER appuser
+
 EXPOSE 8000
 
 WORKDIR /app/packages/api

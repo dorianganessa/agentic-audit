@@ -67,6 +67,24 @@ docker compose logs api | grep "Default API key"
 }
 ```
 
+## Rate Limiting
+
+API endpoints are rate-limited per IP address to prevent abuse.
+
+| Scope | Limit |
+|---|---|
+| API endpoints (`/v1/*`) | 100 requests per minute per IP |
+| Dashboard (`/dashboard/*`) | 30 requests per minute per IP |
+| Health check (`/health`) | Exempt (no limit) |
+
+When the rate limit is exceeded, the server returns **HTTP 429 Too Many Requests** with a `Retry-After` header indicating how many seconds to wait before retrying.
+
+```json
+{
+  "detail": "Rate limit exceeded"
+}
+```
+
 ## Security recommendations
 
 - Rotate API keys periodically

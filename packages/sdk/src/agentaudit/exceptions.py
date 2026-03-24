@@ -1,10 +1,10 @@
-"""Exception hierarchy for the AgentAudit SDK."""
+"""Exception hierarchy for the AgenticAudit SDK."""
 
 from __future__ import annotations
 
 
 class AgentAuditError(Exception):
-    """Base exception for AgentAudit SDK errors."""
+    """Base exception for AgenticAudit SDK errors."""
 
     def __init__(self, message: str, status_code: int | None = None) -> None:
         self.message = message

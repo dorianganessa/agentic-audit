@@ -1,9 +1,9 @@
 [project]
 name = "agentic-audit-mcp"
 version = "0.1.0"
-description = "MCP server for AgentAudit — lets AI agents query their own compliance audit trail"
+description = "MCP server for AgenticAudit — lets AI agents query their own compliance audit trail"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = {text = "AGPL-3.0"}
 requires-python = ">=3.12"
 authors = [
     {name = "Adriano Sanges", email = "adriano@agentaudit.dev"},
@@ -12,7 +12,7 @@ keywords = ["ai", "mcp", "model-context-protocol", "audit", "compliance"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",

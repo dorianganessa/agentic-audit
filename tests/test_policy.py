@@ -49,6 +49,32 @@ def test_update_policy_partial(client, api_key_raw):
     assert data["frameworks"]["ai_act"] is False
 
 
+def test_policy_optimistic_lock_conflict(client, api_key_raw, db_url):
+    """Concurrent policy updates should fail with 409 when version conflicts."""
+    from sqlalchemy import create_engine, update
+    from sqlalchemy.orm import Session as SASession
+
+    from agentaudit_api.models.organization import Organization
+
+    # First, do a normal update to get a known state
+    _set_policy(client, api_key_raw, logging_level="full")
+
+    # Simulate a concurrent update by directly bumping the version in the DB
+    engine = create_engine(db_url)
+    with SASession(engine) as db_session:
+        db_session.execute(update(Organization).values(version=999))
+        db_session.commit()
+
+    # Now the API's next update should fail because the version doesn't match
+    response = client.put(
+        "/v1/org/policy",
+        json={"logging_level": "paranoid"},
+        headers=_auth(api_key_raw),
+    )
+    assert response.status_code == 409
+    assert "concurrently" in response.json()["detail"].lower()
+
+
 # --- Minimal policy ---
 
 
@@ -150,7 +176,7 @@ def test_paranoid_block_high_risk(client, api_key_raw):
     assert data["decision"] == "block"
     assert data["reason"] is not None
     assert "high" in data["reason"]
-    assert data["stored"] is True
+    assert data["stored"] is False
 
 
 def test_paranoid_block_critical(client, api_key_raw):
@@ -168,7 +194,7 @@ def test_paranoid_block_critical(client, api_key_raw):
         data={"command": "rm -rf /var/data"},
     )
     assert data["decision"] == "block"
-    assert data["stored"] is True
+    assert data["stored"] is False
 
 
 def test_paranoid_not_enabled_no_block(client, api_key_raw):
@@ -186,6 +212,31 @@ def test_paranoid_not_enabled_no_block(client, api_key_raw):
         data={"command": "psql -h prod -c 'SELECT 1'"},
     )
     assert data["decision"] == "allow"
+
+
+def test_blocked_event_not_stored(client, api_key_raw):
+    """Blocked events must not be persisted to the database."""
+    _set_policy(
+        client,
+        api_key_raw,
+        logging_level="paranoid",
+        blocking_rules={"enabled": True, "block_on": "high"},
+    )
+    data = _post(
+        client,
+        api_key_raw,
+        action="shell_command",
+        data={"command": "psql -h prod -c 'DROP TABLE users'"},
+    )
+    assert data["decision"] == "block"
+    assert data["stored"] is False
+
+    # Verify it's not in the DB
+    response = client.get(
+        f"/v1/events/{data['id']}",
+        headers={"Authorization": f"Bearer {api_key_raw}"},
+    )
+    assert response.status_code == 404
 
 
 # --- Framework mapping ---

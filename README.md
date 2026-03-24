@@ -1,4 +1,9 @@
-# AgentAudit
+# AgenticAudit
+
+[![CI](https://github.com/dorianganessa/agentic-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/dorianganessa/agentic-audit/actions/workflows/ci.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/agentic-audit.svg)](https://pypi.org/project/agentic-audit/)
 
 Open-source API to log, classify and audit every AI agent action for **GDPR / AI Act / SOC2** compliance.
 
@@ -20,7 +25,7 @@ Open-source API to log, classify and audit every AI agent action for **GDPR / AI
 │       └──────────────┼─────────────┴───────────────┘            │
 │                      │                                          │
 │              ┌───────▼───────┐                                  │
-│              │  AgentAudit   │                                  │
+│              │ AgenticAudit  │                                  │
 │              │  API Server   │◄── MCP Server (query only)       │
 │              │  :8000        │                                  │
 │              └───────┬───────┘                                  │
@@ -34,6 +39,10 @@ Open-source API to log, classify and audit every AI agent action for **GDPR / AI
 │  │  │Policy  │ │Slack      │ │PDF Report  │  │                 │
 │  │  │Engine  │ │Alerter    │ │Generator   │  │                 │
 │  │  └────────┘ └───────────┘ └────────────┘  │                 │
+│  │  ┌────────────┐ ┌──────────┐ ┌─────────┐ │                 │
+│  │  │AI Systems  │ │Compliance│ │FRIA     │ │                 │
+│  │  │Registry    │ │Scorer    │ │Generator│ │                 │
+│  │  └────────────┘ └──────────┘ └─────────┘ │                 │
 │  └───────────────────┬───────────────────────┘                  │
 │                      │                                          │
 │              ┌───────▼───────┐                                  │
@@ -84,12 +93,34 @@ uv run uvicorn agentaudit_api.main:app --host 0.0.0.0 --port 8000
 | `GET` | `/v1/events/{id}` | Get event by ID |
 | `GET` | `/v1/events/stats` | Aggregate statistics |
 
-### Policy
+### AI Systems
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/v1/systems` | Register an AI system |
+| `GET` | `/v1/systems` | List AI systems |
+| `GET` | `/v1/systems/{id}` | Get system by ID |
+| `PUT` | `/v1/systems/{id}` | Update system |
+| `DELETE` | `/v1/systems/{id}` | Deactivate system (soft-delete) |
+| `GET` | `/v1/systems/{id}/events` | Events matching system's agent_id_patterns |
+| `GET` | `/v1/systems/{id}/stats` | Aggregate event stats for system |
+| `GET` | `/v1/systems/{id}/classification-suggestion` | Suggest AI Act risk classification |
+
+### Compliance
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/v1/compliance/ai-act/status` | Compliance score and checks |
+| `GET` | `/v1/compliance/ai-act/report` | Download compliance report (PDF) |
+| `GET` | `/v1/compliance/ai-act/fria/{id}/pdf` | Download FRIA for a system (PDF) |
+
+### Policy & Organization
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/v1/org/policy` | Get current policy |
-| `PUT` | `/v1/org/policy` | Update policy |
+| `PUT` | `/v1/org/policy` | Update policy (supports `compliance_preset`, `retention_days`) |
+| `POST` | `/v1/org/api-keys/rotate` | Rotate API key |
 
 ### Dashboard
 
@@ -98,6 +129,7 @@ uv run uvicorn agentaudit_api.main:app --host 0.0.0.0 --port 8000
 | `/dashboard` | Event timeline with HTMX filters |
 | `/dashboard/events/{id}` | Event detail view |
 | `/dashboard/stats` | Stats overview with charts |
+| `/dashboard/compliance` | AI Act compliance dashboard |
 | `/dashboard/policy` | Policy management UI |
 | `/dashboard/report/pdf` | PDF compliance report export |
 
@@ -140,6 +172,14 @@ for e in result["events"]:
 # Get stats
 stats = audit.get_stats()
 print(stats["total_events"], stats["by_risk_level"])
+
+# AI Systems
+systems = audit.list_systems()
+system = audit.create_system(name="My Bot", agent_id_patterns=["my-bot-*"])
+
+# Compliance
+status = audit.get_compliance_status()
+print(status["score"], status["checks"])
 ```
 
 ## Claude Code Hooks
@@ -167,7 +207,7 @@ In **paranoid** mode with blocking enabled, `agentaudit-hook pre` exits with cod
 
 ## Cowork Integration
 
-Install the AgentAudit plugin in Claude Cowork to audit every knowledge worker action — connector access (Google Drive, Salesforce, DocuSign), file operations, web browsing, and sub-agent coordination.
+Install the AgenticAudit plugin in Claude Cowork to audit every knowledge worker action — connector access (Google Drive, Salesforce, DocuSign), file operations, web browsing, and sub-agent coordination.
 
 ```
 /plugin install github:dorianganessa/agentic-audit --path plugins/cowork
@@ -202,6 +242,9 @@ Configure in Claude Code MCP settings:
 - `get_my_audit_events` — review recent actions and risk levels
 - `get_session_risk_summary` — summary of risk levels for current session
 - `check_action_risk` — dry-run risk check before taking an action
+- `list_ai_systems` — list registered AI systems with compliance status
+- `get_compliance_status` — AI Act compliance score and check results
+- `suggest_classification` — suggest risk classification from event patterns
 
 ## LangChain Integration
 
@@ -223,7 +266,7 @@ export AGENTAUDIT_API_KEY="aa_live_xxx"
 agentaudit-codex-watch
 ```
 
-Automatically tails `~/.codex/sessions/*.jsonl` and maps Codex tool calls (shell, apply_patch, read_file, etc.) to AgentAudit events.
+Automatically tails `~/.codex/sessions/*.jsonl` and maps Codex tool calls (shell, apply_patch, read_file, etc.) to AgenticAudit events.
 
 ## Policy Levels
 
@@ -286,4 +329,4 @@ docs/
 
 ## License
 
-Apache 2.0
+AGPL-3.0

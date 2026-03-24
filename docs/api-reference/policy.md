@@ -57,6 +57,8 @@ Update the organization policy. Supports partial updates — only include the fi
 | `frameworks` | `object` | No | Enable/disable frameworks: `{"gdpr": bool, "ai_act": bool, "soc2": bool}` |
 | `alert_rules` | `list[object]` | No | Alert rule definitions (replaces existing rules) |
 | `blocking_rules` | `object` | No | Blocking configuration: `{"enabled": bool, "block_on": string}` |
+| `compliance_preset` | `string` | No | Compliance preset (e.g., `"ai_act"`). Enables automatic enforcement of preset-specific rules |
+| `retention_days` | `int` | No | Event retention period in days. When `compliance_preset` is `"ai_act"`, automatically enforced to ≥ 180 days (Art 12) |
 
 ### Policy schema
 
@@ -148,6 +150,20 @@ curl -X PUT http://localhost:8000/v1/org/policy \
   }'
 ```
 
+### Example: enable AI Act compliance preset
+
+```bash
+curl -X PUT http://localhost:8000/v1/org/policy \
+  -H "Authorization: Bearer aa_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "compliance_preset": "ai_act",
+    "retention_days": 365
+  }'
+```
+
+When `compliance_preset` is `"ai_act"`, retention is automatically enforced to a minimum of 180 days.
+
 ### Response (200 OK)
 
 Returns the full updated policy object.
@@ -158,3 +174,22 @@ Returns the full updated policy object.
 |---|---|
 | `401` | Missing or invalid API key |
 | `422` | Invalid policy values |
+
+---
+
+## POST /v1/org/api-keys/rotate
+
+Generate a new API key and deactivate the current one. The new raw key is returned once and cannot be retrieved again.
+
+**Authentication:** Bearer token required.
+
+### Response (200 OK)
+
+```json
+{
+  "api_key": "aa_live_NEW_KEY_HERE",
+  "key_prefix": "aa_live_NEW",
+  "id": "01JARQ...",
+  "previous_key_id": "01JARQ..."
+}
+```

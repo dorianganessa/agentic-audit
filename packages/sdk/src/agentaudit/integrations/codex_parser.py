@@ -1,4 +1,4 @@
-"""Codex transcript parser — tails Codex session files and forwards events to AgentAudit."""
+"""Codex transcript parser — tails Codex session files and forwards events to AgenticAudit."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from agentaudit.client import AgentAudit
 
 logger = logging.getLogger(__name__)
 
-# Map Codex tool names to AgentAudit action types
+# Map Codex tool names to AgenticAudit action types
 _TOOL_MAP: dict[str, str] = {
     "shell": "shell_command",
     "apply_patch": "file_edit",
@@ -24,7 +24,7 @@ _TOOL_MAP: dict[str, str] = {
 
 
 class CodexTranscriptParser:
-    """Background process that tails Codex session transcripts and forwards events to AgentAudit.
+    """Background process that tails Codex session transcripts and forwards events to AgenticAudit.
 
     Usage::
 

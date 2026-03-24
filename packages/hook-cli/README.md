@@ -1,4 +1,4 @@
-# AgentAudit Hook CLI
+# AgenticAudit Hook CLI
 
 CLI for auditing [Claude Code](https://docs.agentaudit.dev/integrations/claude-code/) and [Cowork](https://docs.agentaudit.dev/integrations/cowork/) sessions automatically.
 

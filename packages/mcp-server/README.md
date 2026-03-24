@@ -1,8 +1,8 @@
-# AgentAudit MCP Server
+# AgenticAudit MCP Server
 
-[MCP](https://modelcontextprotocol.io/) server that lets AI agents query their own [AgentAudit](https://agentaudit.dev) compliance trail.
+[MCP](https://modelcontextprotocol.io/) server that lets AI agents query their own [AgenticAudit](https://agentaudit.dev) compliance trail.
 
-Agents can review their recent actions, check risk summaries, and dry-run risk checks before executing.
+Agents can review their recent actions, check risk summaries, dry-run risk checks, and query AI Act compliance status.
 
 ## Install
 
@@ -41,6 +41,9 @@ uvx agentic-audit-mcp
 | `get_my_audit_events` | Review recent actions and risk levels |
 | `get_session_risk_summary` | Risk breakdown for the current session |
 | `check_action_risk` | Dry-run risk check without logging |
+| `list_ai_systems` | List registered AI systems with compliance status |
+| `get_compliance_status` | AI Act compliance score and check results |
+| `suggest_classification` | Suggest risk classification from event patterns |
 
 ## Links
 

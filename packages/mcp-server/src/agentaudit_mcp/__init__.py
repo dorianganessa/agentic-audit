@@ -1,3 +1,3 @@
-"""AgentAudit MCP server."""
+"""AgenticAudit MCP server."""
 
 __version__ = "0.1.0"

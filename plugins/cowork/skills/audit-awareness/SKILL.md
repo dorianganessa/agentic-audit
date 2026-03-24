@@ -1,11 +1,11 @@
 ---
 name: audit-awareness
-description: AgentAudit is monitoring this session. Every action you take is logged, classified for risk, and mapped to compliance frameworks (GDPR, AI Act, SOC 2). You don't need to do anything — logging happens automatically via hooks. But be aware that high-risk actions (accessing sensitive files, PII queries, credential access) are flagged and may be blocked depending on the organization's policy.
+description: AgenticAudit is monitoring this session. Every action you take is logged, classified for risk, and mapped to compliance frameworks (GDPR, AI Act, SOC 2). You don't need to do anything — logging happens automatically via hooks. But be aware that high-risk actions (accessing sensitive files, PII queries, credential access) are flagged and may be blocked depending on the organization's policy.
 ---
 
-# AgentAudit — Compliance Monitoring Active
+# AgenticAudit — Compliance Monitoring Active
 
-This session is being monitored by AgentAudit for compliance purposes.
+This session is being monitored by AgenticAudit for compliance purposes.
 
 ## What's being logged
 
@@ -22,7 +22,7 @@ Every tool call you make is automatically captured:
 - **Risk levels are assigned automatically:** low, medium, high, critical.
 - **PII is detected automatically** in file names, paths, content, and connector queries.
 - **If an action is blocked**, it means the organization's policy flagged it as too risky. Inform the user and suggest an alternative approach.
-- **If the user asks about the audit trail**, you can query it using the AgentAudit MCP tools (if configured): `get_my_audit_events`, `get_session_risk_summary`, `check_action_risk`.
+- **If the user asks about the audit trail**, you can query it using the AgenticAudit MCP tools (if configured): `get_my_audit_events`, `get_session_risk_summary`, `check_action_risk`.
 
 ## When to be extra cautious
 

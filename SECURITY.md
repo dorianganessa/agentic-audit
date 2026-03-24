@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in AgentAudit, please report it
+If you discover a security vulnerability in AgenticAudit, please report it
 responsibly.
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
@@ -32,7 +32,7 @@ feature on this repository.
 
 ## Security Design
 
-AgentAudit is designed with security in mind:
+AgenticAudit is designed with security in mind:
 
 - **API keys** are stored as SHA-256 hashes, never in plaintext
 - **Constant-time comparison** (`hmac.compare_digest`) prevents timing attacks

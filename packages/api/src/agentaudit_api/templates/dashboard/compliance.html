@@ -1,0 +1,117 @@
+{% extends "dashboard/base.html" %}
+{% block title %}AI Act Compliance - AgenticAudit{% endblock %}
+{% block content %}
+<h2 style="margin-bottom: 1rem;">AI Act Compliance Dashboard</h2>
+
+<!-- Score -->
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="card-header">Compliance Score</div>
+        <div class="stat-value" style="color: {% if score >= 80 %}var(--green){% elif score >= 50 %}var(--yellow){% else %}var(--red){% endif %};">{{ score }}%</div>
+    </div>
+    <div class="card stat-card">
+        <div class="card-header">AI Systems</div>
+        <div class="stat-value">{{ summary.total_systems }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="card-header">High Risk</div>
+        <div class="stat-value" style="color: var(--orange);">{{ summary.high_risk }}</div>
+    </div>
+    <div class="card stat-card">
+        <div class="card-header">FRIA Completed</div>
+        <div class="stat-value">{{ summary.fria_completed }}/{{ summary.high_risk }}</div>
+    </div>
+</div>
+
+<!-- Checks -->
+<div class="card">
+    <div class="card-header">Compliance Checks</div>
+    <table>
+        <thead>
+            <tr><th>Check</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for check_name, passed in checks.items() %}
+            <tr>
+                <td>{{ check_name.replace('_', ' ').title() }}</td>
+                <td>
+                    {% if passed %}
+                    <span class="badge badge-low">Pass</span>
+                    {% else %}
+                    <span class="badge badge-critical">Fail</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Systems -->
+{% if systems %}
+<div class="card">
+    <div class="card-header">AI Systems Inventory</div>
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Vendor</th><th>Risk</th><th>Category</th><th>FRIA</th><th>Contract</th></tr>
+        </thead>
+        <tbody>
+            {% for s in systems %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>{{ s.vendor or '-' }}</td>
+                <td>
+                    <span class="badge badge-{% if s.risk_classification == 'high' %}high{% elif s.risk_classification == 'prohibited' %}critical{% elif s.risk_classification == 'limited' %}medium{% else %}low{% endif %}">
+                        {{ s.risk_classification }}
+                    </span>
+                </td>
+                <td>{{ s.annex_iii_category or '-' }}</td>
+                <td>{{ s.fria_status }}</td>
+                <td>{% if s.contract_has_ai_annex %}Yes{% else %}No{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Upcoming Deadlines -->
+{% if deadlines %}
+<div class="card">
+    <div class="card-header">Upcoming Deadlines</div>
+    <table>
+        <thead>
+            <tr><th>System</th><th>Type</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+            {% for d in deadlines %}
+            <tr>
+                <td>{{ d.system }}</td>
+                <td>{{ d.type.replace('_', ' ').title() }}</td>
+                <td>{{ d.date[:10] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Downloads -->
+<div class="card">
+    <div class="card-header">Reports</div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="/v1/compliance/ai-act/report" class="btn">Download Compliance Report (PDF)</a>
+        {% for s in high_risk_systems %}
+        <a href="/v1/compliance/ai-act/fria/{{ s.id }}/pdf" class="btn btn-secondary">FRIA: {{ s.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 1rem;">
+    <span class="text-muted" style="font-size: 0.8125rem;">
+        Preset: {{ compliance_preset or 'None' }} |
+        Retention: {{ summary.retention_days }} days
+        {% if not summary.retention_compliant %}<span style="color: var(--red);">(below 180-day minimum)</span>{% endif %}
+    </span>
+</div>
+{% endblock %}

@@ -48,3 +48,6 @@ buffer.jsonl
 
 # MkDocs build output
 site_docs/
+
+# MCP config (contains API keys)
+.mcp.json

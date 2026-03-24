@@ -2,9 +2,16 @@
 
 from unittest.mock import MagicMock, patch
 
+from agentaudit_api.models.api_key import hash_api_key
+
 
 def _auth(api_key_raw):
     return {"Authorization": f"Bearer {api_key_raw}"}
+
+
+def _set_dashboard_cookie(client, api_key_raw):
+    """Set the dashboard auth cookie on the test client."""
+    client.cookies.set("agentaudit_session", hash_api_key(api_key_raw))
 
 
 def _set_full(client, api_key_raw):
@@ -24,6 +31,7 @@ def _post(client, api_key_raw, **kwargs):
 
 def test_dashboard_timeline_200(client, api_key_raw):
     """GET /dashboard returns 200 with HTML."""
+    _set_dashboard_cookie(client, api_key_raw)
     _set_full(client, api_key_raw)
     _post(client, api_key_raw)
 
@@ -36,6 +44,7 @@ def test_dashboard_timeline_200(client, api_key_raw):
 
 def test_dashboard_timeline_filter_risk(client, api_key_raw):
     """GET /dashboard?risk_level=high filters events via HTMX."""
+    _set_dashboard_cookie(client, api_key_raw)
     _set_full(client, api_key_raw)
     _post(client, api_key_raw, action="shell_command", data={"command": "echo hi"})
     _post(
@@ -56,6 +65,7 @@ def test_dashboard_timeline_filter_risk(client, api_key_raw):
 
 def test_dashboard_timeline_empty(client, api_key_raw):
     """Dashboard with no events shows empty state."""
+    _set_dashboard_cookie(client, api_key_raw)
     resp = client.get("/dashboard")
     assert resp.status_code == 200
     assert "No events found" in resp.text
@@ -66,6 +76,7 @@ def test_dashboard_timeline_empty(client, api_key_raw):
 
 def test_dashboard_event_detail(client, api_key_raw):
     """GET /dashboard/events/{id} shows event details."""
+    _set_dashboard_cookie(client, api_key_raw)
     _set_full(client, api_key_raw)
     created = _post(
         client,
@@ -84,6 +95,7 @@ def test_dashboard_event_detail(client, api_key_raw):
 
 def test_dashboard_event_not_found(client, api_key_raw):
     """GET /dashboard/events/{bad_id} returns 404."""
+    _set_dashboard_cookie(client, api_key_raw)
     resp = client.get("/dashboard/events/nonexistent_12345")
     assert resp.status_code == 404
 
@@ -93,6 +105,7 @@ def test_dashboard_event_not_found(client, api_key_raw):
 
 def test_dashboard_policy_page(client, api_key_raw):
     """GET /dashboard/policy shows current policy."""
+    _set_dashboard_cookie(client, api_key_raw)
     resp = client.get("/dashboard/policy")
     assert resp.status_code == 200
     assert "Policy" in resp.text
@@ -101,6 +114,7 @@ def test_dashboard_policy_page(client, api_key_raw):
 
 def test_dashboard_policy_update(client, api_key_raw):
     """PUT /dashboard/policy updates the policy via HTMX."""
+    _set_dashboard_cookie(client, api_key_raw)
     resp = client.put(
         "/dashboard/policy?logging_level=full&fw_gdpr=true&fw_ai_act=true&fw_soc2=true&blocking_enabled=false&block_on=critical"
     )
@@ -119,6 +133,7 @@ def test_dashboard_policy_update(client, api_key_raw):
 
 def test_dashboard_stats(client, api_key_raw):
     """GET /dashboard/stats returns stats page with counters."""
+    _set_dashboard_cookie(client, api_key_raw)
     _set_full(client, api_key_raw)
     _post(client, api_key_raw, action="shell_command", data={"command": "echo hi"})
     _post(client, api_key_raw, action="access_record", data={"email": "u@e.com"})
@@ -134,6 +149,7 @@ def test_dashboard_stats(client, api_key_raw):
 
 def test_dashboard_report_pdf(client, api_key_raw):
     """GET /dashboard/report/pdf returns a valid PDF."""
+    _set_dashboard_cookie(client, api_key_raw)
     _set_full(client, api_key_raw)
     _post(client, api_key_raw, action="shell_command", data={"command": "echo hi"})
     _post(

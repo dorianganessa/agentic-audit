@@ -9,7 +9,7 @@
     "/health": {
       "get": {
         "summary": "Health",
-        "description": "Health check endpoint.",
+        "description": "Health check endpoint with database connectivity verification.",
         "operationId": "health_health_get",
         "responses": {
           "200": {
@@ -17,9 +17,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
+                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Health Health Get"
                 }
@@ -474,10 +472,1100 @@
           }
         ]
       }
+    },
+    "/v1/org/api-keys/rotate": {
+      "post": {
+        "summary": "Rotate API key",
+        "description": "Generate a new API key and deactivate the current one. The new raw key is returned once and cannot be retrieved again.",
+        "operationId": "rotate_api_key_v1_org_api_keys_rotate_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Rotate Api Key V1 Org Api Keys Rotate Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/otlp/v1/logs": {
+      "post": {
+        "tags": [
+          "otlp"
+        ],
+        "summary": "Receive OTLP logs",
+        "description": "OTLP-compatible endpoint that receives OpenTelemetry log records (ExportLogsServiceRequest JSON format). Used by Cowork for event ingestion.",
+        "operationId": "receive_otlp_logs_v1_otlp_v1_logs_post",
+        "responses": {
+          "200": {
+            "description": "Events accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Receive Otlp Logs V1 Otlp V1 Logs Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key"
+          },
+          "422": {
+            "description": "Invalid OTLP payload"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/systems": {
+      "post": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Register an AI system",
+        "description": "Register a new AI system for compliance tracking.",
+        "operationId": "create_v1_systems_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AISystemCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AISystemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "List AI systems",
+        "description": "List all registered AI systems for the organization.",
+        "operationId": "list_all_v1_systems_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response List All V1 Systems Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/systems/{system_id}": {
+      "get": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Get AI system",
+        "description": "Get a single AI system by ID.",
+        "operationId": "get_one_v1_systems__system_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AISystemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Update AI system",
+        "description": "Partially update an AI system.",
+        "operationId": "update_v1_systems__system_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AISystemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AISystemRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Deactivate AI system",
+        "description": "Soft-delete (deactivate) an AI system.",
+        "operationId": "deactivate_v1_systems__system_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/systems/{system_id}/events": {
+      "get": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "List events for an AI system",
+        "description": "List audit events matching this system's agent_id_patterns.",
+        "operationId": "system_events_v1_systems__system_id__events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response System Events V1 Systems  System Id  Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/systems/{system_id}/stats": {
+      "get": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Get event statistics for an AI system",
+        "description": "Get aggregate event statistics for a system based on its agent_id_patterns.",
+        "operationId": "system_stats_v1_systems__system_id__stats_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response System Stats V1 Systems  System Id  Stats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/systems/{system_id}/classification-suggestion": {
+      "get": {
+        "tags": [
+          "systems"
+        ],
+        "summary": "Suggest AI Act risk classification",
+        "description": "Analyze events and suggest risk classification + Annex III category.",
+        "operationId": "classification_suggestion_v1_systems__system_id__classification_suggestion_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Classification Suggestion V1 Systems  System Id  Classification Suggestion Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/compliance/ai-act/status": {
+      "get": {
+        "tags": [
+          "compliance"
+        ],
+        "summary": "AI Act compliance status",
+        "description": "Get overall AI Act compliance status for the organization.",
+        "operationId": "compliance_status_v1_compliance_ai_act_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Compliance Status V1 Compliance Ai Act Status Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/compliance/ai-act/report": {
+      "get": {
+        "tags": [
+          "compliance"
+        ],
+        "summary": "Download AI Act compliance report PDF",
+        "description": "Generate and download an AI Act compliance report.",
+        "operationId": "compliance_report_pdf_v1_compliance_ai_act_report_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/compliance/ai-act/fria/{system_id}/pdf": {
+      "get": {
+        "tags": [
+          "compliance"
+        ],
+        "summary": "Download FRIA PDF for a system",
+        "description": "Generate a pre-filled FRIA PDF for a specific AI system.",
+        "operationId": "fria_pdf_v1_compliance_ai_act_fria__system_id__pdf_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "system_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "System Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AISystemCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name"
+          },
+          "vendor": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Vendor",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Description",
+            "default": ""
+          },
+          "use_case": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Use Case",
+            "default": ""
+          },
+          "agent_id_patterns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Agent Id Patterns"
+          },
+          "risk_classification": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Risk Classification",
+            "default": "unclassified"
+          },
+          "classification_rationale": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Classification Rationale",
+            "default": ""
+          },
+          "annex_iii_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annex Iii Category"
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Role",
+            "default": "deployer"
+          },
+          "contract_has_ai_annex": {
+            "type": "boolean",
+            "title": "Contract Has Ai Annex",
+            "default": false
+          },
+          "provider_obligations_documented": {
+            "type": "boolean",
+            "title": "Provider Obligations Documented",
+            "default": false
+          },
+          "contract_last_reviewed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Last Reviewed"
+          },
+          "contract_notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Contract Notes",
+            "default": ""
+          },
+          "fria_status": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Fria Status",
+            "default": "not_started"
+          },
+          "fria_completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Completed At"
+          },
+          "fria_next_review": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Next Review"
+          },
+          "next_review_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Review Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "AISystemCreate",
+        "description": "Schema for creating an AI system."
+      },
+      "AISystemRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "org_id": {
+            "type": "string",
+            "title": "Org Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "vendor": {
+            "type": "string",
+            "title": "Vendor"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "use_case": {
+            "type": "string",
+            "title": "Use Case"
+          },
+          "agent_id_patterns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Agent Id Patterns"
+          },
+          "risk_classification": {
+            "type": "string",
+            "title": "Risk Classification"
+          },
+          "classification_rationale": {
+            "type": "string",
+            "title": "Classification Rationale"
+          },
+          "annex_iii_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annex Iii Category"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "contract_has_ai_annex": {
+            "type": "boolean",
+            "title": "Contract Has Ai Annex"
+          },
+          "provider_obligations_documented": {
+            "type": "boolean",
+            "title": "Provider Obligations Documented"
+          },
+          "contract_last_reviewed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Last Reviewed"
+          },
+          "contract_notes": {
+            "type": "string",
+            "title": "Contract Notes"
+          },
+          "fria_status": {
+            "type": "string",
+            "title": "Fria Status"
+          },
+          "fria_completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Completed At"
+          },
+          "fria_next_review": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Next Review"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "next_review_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Review Date"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "org_id",
+          "name",
+          "vendor",
+          "description",
+          "use_case",
+          "agent_id_patterns",
+          "risk_classification",
+          "classification_rationale",
+          "annex_iii_category",
+          "role",
+          "contract_has_ai_annex",
+          "provider_obligations_documented",
+          "contract_last_reviewed",
+          "contract_notes",
+          "fria_status",
+          "fria_completed_at",
+          "fria_next_review",
+          "is_active",
+          "next_review_date",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AISystemRead",
+        "description": "Schema for reading an AI system (API response)."
+      },
+      "AISystemUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "use_case": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Case"
+          },
+          "agent_id_patterns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Id Patterns"
+          },
+          "risk_classification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Classification"
+          },
+          "classification_rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classification Rationale"
+          },
+          "annex_iii_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annex Iii Category"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "contract_has_ai_annex": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Has Ai Annex"
+          },
+          "provider_obligations_documented": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Obligations Documented"
+          },
+          "contract_last_reviewed": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Last Reviewed"
+          },
+          "contract_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Notes"
+          },
+          "fria_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Status"
+          },
+          "fria_completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Completed At"
+          },
+          "fria_next_review": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fria Next Review"
+          },
+          "next_review_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Review Date"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "AISystemUpdate",
+        "description": "Schema for partial update of an AI system."
+      },
       "AuditEventCreate": {
         "properties": {
           "agent_id": {
@@ -688,6 +1776,28 @@
               }
             ],
             "title": "Blocking Rules"
+          },
+          "compliance_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compliance Preset"
+          },
+          "retention_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retention Days"
           }
         },
         "type": "object",

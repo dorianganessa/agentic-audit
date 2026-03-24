@@ -1,4 +1,4 @@
-"""Synchronous and asynchronous HTTP clients for the AgentAudit API."""
+"""Synchronous and asynchronous HTTP clients for the AgenticAudit API."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def _handle_error_response(response: httpx.Response) -> None:
 
 
 class AgentAudit:
-    """Synchronous AgentAudit client.
+    """Synchronous AgenticAudit client.
 
     Usage::
 
@@ -168,6 +168,42 @@ class AgentAudit:
         _handle_error_response(response)
         return response.json()  # type: ignore[no-any-return]
 
+    # --- AI Systems ---
+
+    def list_systems(self) -> dict[str, Any]:
+        """List registered AI systems."""
+        response = self._client.get("/v1/systems")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    def get_system(self, system_id: str) -> dict[str, Any]:
+        """Get a single AI system by ID."""
+        response = self._client.get(f"/v1/systems/{system_id}")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    def create_system(self, **kwargs: Any) -> dict[str, Any]:
+        """Register a new AI system."""
+        response = self._client.post("/v1/systems", json=kwargs)
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    # --- Compliance ---
+
+    def get_compliance_status(self) -> dict[str, Any]:
+        """Get AI Act compliance status."""
+        response = self._client.get("/v1/compliance/ai-act/status")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    def get_classification_suggestion(self, system_id: str) -> dict[str, Any]:
+        """Get AI Act risk classification suggestion for a system."""
+        response = self._client.get(
+            f"/v1/systems/{system_id}/classification-suggestion"
+        )
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
     def close(self) -> None:
         """Close the underlying HTTP client."""
         self._client.close()
@@ -180,7 +216,7 @@ class AgentAudit:
 
 
 class AsyncAgentAudit:
-    """Asynchronous AgentAudit client.
+    """Asynchronous AgenticAudit client.
 
     Usage::
 
@@ -241,6 +277,42 @@ class AsyncAgentAudit:
 
         _handle_error_response(response)
         return AuditEvent.from_api_response(response.json())
+
+    # --- AI Systems ---
+
+    async def list_systems(self) -> dict[str, Any]:
+        """List registered AI systems."""
+        response = await self._client.get("/v1/systems")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    async def get_system(self, system_id: str) -> dict[str, Any]:
+        """Get a single AI system by ID."""
+        response = await self._client.get(f"/v1/systems/{system_id}")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    async def create_system(self, **kwargs: Any) -> dict[str, Any]:
+        """Register a new AI system."""
+        response = await self._client.post("/v1/systems", json=kwargs)
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    # --- Compliance ---
+
+    async def get_compliance_status(self) -> dict[str, Any]:
+        """Get AI Act compliance status."""
+        response = await self._client.get("/v1/compliance/ai-act/status")
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
+
+    async def get_classification_suggestion(self, system_id: str) -> dict[str, Any]:
+        """Get AI Act risk classification suggestion for a system."""
+        response = await self._client.get(
+            f"/v1/systems/{system_id}/classification-suggestion"
+        )
+        _handle_error_response(response)
+        return response.json()  # type: ignore[no-any-return]
 
     async def close(self) -> None:
         """Close the underlying async HTTP client."""

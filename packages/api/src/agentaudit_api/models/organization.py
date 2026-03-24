@@ -33,6 +33,7 @@ class Organization(SQLModel, table=True):
         default_factory=lambda: {**DEFAULT_POLICY},
         sa_column=Column(JSON, nullable=False),
     )
+    version: int = Field(default=1)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -44,3 +45,5 @@ class PolicyUpdate(SQLModel):
     frameworks: dict[str, Any] | None = None
     alert_rules: list[dict[str, Any]] | None = None
     blocking_rules: dict[str, Any] | None = None
+    compliance_preset: str | None = None
+    retention_days: int | None = None

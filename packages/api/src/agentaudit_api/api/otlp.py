@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/otlp", tags=["otlp"])
 
-# Mapping from Cowork event names to AgentAudit action types.
+# Mapping from Cowork event names to AgenticAudit action types.
 _EVENT_ACTION_MAP: dict[str, str] = {
     "cowork.tool_result": "connector_access",
     "cowork.tool_decision": "tool_decision",
@@ -29,7 +29,7 @@ _EVENT_ACTION_MAP: dict[str, str] = {
     "cowork.api_error": "api_error",
 }
 
-# Tool names that map to specific AgentAudit actions instead of connector_access.
+# Tool names that map to specific AgenticAudit actions instead of connector_access.
 _TOOL_ACTION_MAP: dict[str, str] = {
     "Read": "file_read",
     "Write": "file_write",
@@ -122,7 +122,7 @@ def _map_log_record(
     if not event_name:
         return None
 
-    # Determine AgentAudit action
+    # Determine AgenticAudit action
     tool_name = record_attrs.get("tool_name", "")
     if event_name == "cowork.tool_result" and tool_name in _TOOL_ACTION_MAP:
         action = _TOOL_ACTION_MAP[tool_name]
@@ -214,7 +214,7 @@ async def receive_otlp_logs(
     api_key: ApiKey = Depends(get_current_api_key),
     session: Session = Depends(get_session),
 ) -> dict[str, Any]:
-    """Receive OTLP ExportLogsServiceRequest and map to AgentAudit events."""
+    """Receive OTLP ExportLogsServiceRequest and map to AgenticAudit events."""
     try:
         body = await request.json()
     except Exception as exc:

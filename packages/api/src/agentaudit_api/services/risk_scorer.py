@@ -1,12 +1,37 @@
-"""Rules-based risk scoring for audit events."""
+"""Rules-based risk scoring for audit events.
+
+Uses the YAML rules engine for evaluation. The ``score_risk`` function
+maintains the same public API but delegates to the engine internally.
+"""
 
 from __future__ import annotations
 
-import re
+import logging
 from typing import Any
 
+from agentaudit_api.services.rules.engine import EvaluationResult, RuleEngine
+from agentaudit_api.services.rules.loader import create_engine
+
+logger = logging.getLogger(__name__)
+
 RISK_LEVELS: tuple[str, ...] = ("low", "medium", "high", "critical")
-_RISK_ORDER: dict[str, int] = {level: i for i, level in enumerate(RISK_LEVELS)}
+
+# Module-level engine singleton, loaded lazily
+_engine: RuleEngine | None = None
+
+
+def get_engine() -> RuleEngine:
+    """Get (or create) the shared rules engine singleton."""
+    global _engine  # noqa: PLW0603
+    if _engine is None:
+        _engine = create_engine()
+    return _engine
+
+
+def reset_engine() -> None:
+    """Reset the engine singleton (useful for testing)."""
+    global _engine  # noqa: PLW0603
+    _engine = None
 
 
 def score_risk(
@@ -17,7 +42,7 @@ def score_risk(
 ) -> str:
     """Compute the risk level for an audit event.
 
-    Evaluates the action and data against a set of rules and returns
+    Evaluates the action and data against YAML rules and returns
     the highest matching risk level.
 
     Args:
@@ -29,93 +54,36 @@ def score_risk(
     Returns:
         One of: low, medium, high, critical.
     """
-    levels: list[str] = []
-
-    command = str(data.get("command", ""))
-    file_path = str(data.get("file_path", ""))
-    environment = str(context.get("environment", ""))
-
-    # --- Critical rules ---
-    if _has_credential_indicators(action, data):
-        levels.append("critical")
-
-    if action == "shell_command" and _matches_any(
-        command, ["rm -rf", "rm  -rf", "DROP ", "DELETE FROM"]
-    ):
-        levels.append("critical")
-
-    # --- High rules ---
-    if action == "shell_command" and _matches_any(command, ["prod", "production"]):
-        levels.append("high")
-
-    if pii_detected and environment == "production":
-        levels.append("high")
-
-    if action == "file_write" and _path_matches_sensitive_write(file_path):
-        levels.append("high")
-
-    if action == "file_read" and _path_matches_sensitive_read(file_path):
-        levels.append("high")
-
-    # --- Medium rules ---
-    if pii_detected:
-        levels.append("medium")
-
-    if action == "shell_command" and _matches_any(command, ["sudo ", "chmod "]):
-        levels.append("medium")
-
-    # --- Low rules ---
-    if action == "shell_command" and _matches_any(
-        command, ["npm install", "pip install", "uv add"]
-    ):
-        levels.append("low")
-
-    if not levels:
-        return "low"
-
-    return max(levels, key=lambda level: _RISK_ORDER[level])
+    result = evaluate_event(action, data, context, pii_detected)
+    return result.risk_level
 
 
-def _has_credential_indicators(action: str, data: dict[str, Any]) -> bool:
-    """Check if the action or data suggests credential access."""
-    if "credential" in action.lower() or "password" in action.lower():
-        return True
+def evaluate_event(
+    action: str,
+    data: dict[str, Any],
+    context: dict[str, Any],
+    pii_detected: bool,
+    engine: RuleEngine | None = None,
+) -> EvaluationResult:
+    """Full evaluation returning matched rules, tags, and effects.
 
-    data_str = _flatten_to_str(data)
-    credential_patterns = [
-        r"sk_live_[a-zA-Z0-9]+",
-        r"sk_test_[a-zA-Z0-9]+",
-        r"ghp_[a-zA-Z0-9]+",
-        r"AKIA[A-Z0-9]+",
-        r"password\s*[:=]\s*\S+",
-    ]
-    return any(re.search(pat, data_str) for pat in credential_patterns)
+    Args:
+        action: The action type.
+        data: Action-specific payload.
+        context: Environment metadata.
+        pii_detected: Whether PII was found.
+        engine: Optional engine override (uses singleton if None).
 
+    Returns:
+        EvaluationResult with risk_level, matched_rules, tags, etc.
+    """
+    eng = engine or get_engine()
 
-def _matches_any(text: str, keywords: list[str]) -> bool:
-    """Case-insensitive check if text contains any of the keywords."""
-    text_lower = text.lower()
-    return any(kw.lower() in text_lower for kw in keywords)
+    event = {
+        "action": action,
+        "data": data,
+        "context": context,
+        "pii_detected": pii_detected,
+    }
 
-
-def _path_matches_sensitive_write(file_path: str) -> bool:
-    """Check if a file path indicates a sensitive write target."""
-    path_lower = file_path.lower()
-    return any(pat in path_lower for pat in [".env", "auth", "secret", "credential", "token"])
-
-
-def _path_matches_sensitive_read(file_path: str) -> bool:
-    """Check if a file path indicates a sensitive read target."""
-    path_lower = file_path.lower()
-    return any(pat in path_lower for pat in [".env", ".pem", ".key", "id_rsa", "credential"])
-
-
-def _flatten_to_str(data: object) -> str:
-    """Recursively flatten a dict/list to a single string for pattern matching."""
-    if isinstance(data, str):
-        return data
-    if isinstance(data, dict):
-        return " ".join(_flatten_to_str(v) for v in data.values())
-    if isinstance(data, list):
-        return " ".join(_flatten_to_str(v) for v in data)
-    return str(data) if data is not None else ""
+    return eng.evaluate(event)

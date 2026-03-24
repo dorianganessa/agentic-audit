@@ -49,6 +49,7 @@ module = [
     "fpdf.*",
     "mcp.*",
     "langchain_core.*",
+    "crewai.*",
     "sqlmodel.*",
     "ulid.*",
 ]

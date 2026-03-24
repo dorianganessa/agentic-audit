@@ -89,6 +89,84 @@ The MCP server includes a local risk checker that scores actions without calling
 - **PII** — Emails, IP addresses, phone numbers, credit cards
 - **Sensitive files** — `.env`, `.pem`, `.key`, `id_rsa`, credentials
 
+### `list_ai_systems`
+
+List all registered AI systems with their risk classification and compliance status.
+
+**Returns:**
+
+```json
+{
+  "systems": [
+    {
+      "id": "01JARQ...",
+      "name": "HR Screening Bot",
+      "vendor": "Acme AI",
+      "risk_classification": "high",
+      "annex_iii_category": "employment",
+      "fria_status": "completed",
+      "contract_has_ai_annex": true,
+      "agent_id_patterns": ["hr-bot", "hr-bot-*"],
+      "is_active": true
+    }
+  ],
+  "total": 1
+}
+```
+
+### `get_compliance_status`
+
+Get the organization's AI Act compliance score and check results.
+
+**Returns:**
+
+```json
+{
+  "score": 80,
+  "checks": {
+    "all_classified": true,
+    "no_prohibited": true,
+    "fria_complete": false,
+    "contracts_reviewed": true,
+    "retention_compliant": true
+  },
+  "summary": {
+    "total_systems": 5,
+    "high_risk": 2,
+    "fria_completed": 1,
+    "retention_days": 365
+  },
+  "deadlines": [
+    {"system": "HR Bot", "type": "fria_review", "date": "2026-07-15T00:00:00"}
+  ]
+}
+```
+
+### `suggest_classification`
+
+Suggest an AI Act risk classification for a system by analyzing its event patterns.
+
+**Parameters:**
+
+| Name        | Type   | Description         |
+|-------------|--------|---------------------|
+| `system_id` | string | AI system ID        |
+
+**Returns:**
+
+```json
+{
+  "suggested_classification": "high",
+  "suggested_category": "employment",
+  "rationale": "Data patterns suggest Annex III category: employment",
+  "evidence": {
+    "total_events": 1523,
+    "pii_events": 45,
+    "category_scores": {"employment": 5}
+  }
+}
+```
+
 ## Environment Variables
 
 | Variable               | Required | Description             |

@@ -8,10 +8,14 @@ These variables configure the AgenticAudit API server.
 
 | Variable | Default | Description |
 |---|---|---|
-| `AGENTAUDIT_DATABASE_URL` | `postgresql+psycopg2://agentaudit:agentaudit@localhost:5432/agentaudit` | PostgreSQL connection string |
+| `AGENTAUDIT_DATABASE_URL` | *(required)* | PostgreSQL connection string. Example: `postgresql+psycopg2://user:pass@localhost:5432/agentaudit` |
 | `AGENTAUDIT_API_HOST` | `0.0.0.0` | API server bind host |
 | `AGENTAUDIT_API_PORT` | `8000` | API server bind port |
 | `AGENTAUDIT_DEBUG` | `false` | Enable debug mode (verbose logging, stack traces) |
+
+!!! danger "AGENTAUDIT_DATABASE_URL is required"
+    The application will raise a `RuntimeError` at startup if `AGENTAUDIT_DATABASE_URL` is not set.
+    There is no default value — you must provide a valid PostgreSQL connection string.
 | `AGENTAUDIT_LOG_LEVEL` | `INFO` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 
 ## SDK and hook CLI

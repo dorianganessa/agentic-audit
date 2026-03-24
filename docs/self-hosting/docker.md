@@ -80,6 +80,14 @@ Run with:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d api
 ```
 
+### Non-root container user
+
+The API container runs as a non-root user `appuser` with UID/GID **1000**. If you mount host volumes into the container, ensure the directories have appropriate permissions for UID 1000:
+
+```bash
+chown -R 1000:1000 /path/to/your/volume
+```
+
 ### TLS
 
 Terminate TLS at a reverse proxy (nginx, Caddy, or a cloud load balancer) in front of the API container.

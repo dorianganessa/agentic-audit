@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 
@@ -9,6 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, s
 from sqlalchemy.orm import Session
 
 from agentaudit_api.auth.api_key import get_current_api_key
+from agentaudit_api.config import get_settings
 from agentaudit_api.database import get_session
 from agentaudit_api.models.api_key import ApiKey
 from agentaudit_api.models.event import AuditEventCreate, AuditEventRead
@@ -51,6 +53,23 @@ def ingest_event(
     session: Session = Depends(get_session),
 ) -> AuditEventRead:
     """Ingest a new audit event."""
+    settings = get_settings()
+    data_size = len(json.dumps(event_data.data, default=str).encode())
+    ctx_size = len(json.dumps(event_data.context, default=str).encode())
+    if data_size > settings.max_event_data_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"data field too large ({data_size} bytes, max {settings.max_event_data_bytes})",
+        )
+    if ctx_size > settings.max_event_context_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=(
+                f"context field too large"
+                f" ({ctx_size} bytes, max {settings.max_event_context_bytes})"
+            ),
+        )
+
     result = create_event(session, event_data, api_key_id=api_key.id, org_id=api_key.org_id)
 
     alert_rules = _get_alert_rules(session, api_key)

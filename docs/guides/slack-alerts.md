@@ -52,6 +52,11 @@ curl -X POST http://localhost:8000/v1/events \
 
 This triggers a `critical` risk event. Check your Slack channel — you should see a formatted alert with the event details.
 
+!!! warning "Webhook URL validation"
+    Webhook URLs must use **HTTPS** and point to `hooks.slack.com`. Webhook URLs with
+    other hosts are silently rejected for security. If you need to integrate with other
+    webhook providers, you can modify the `ALLOWED_WEBHOOK_HOSTS` set in the source code.
+
 ## Alert message format
 
 The Slack message includes:

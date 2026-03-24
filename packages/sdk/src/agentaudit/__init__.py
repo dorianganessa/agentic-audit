@@ -1,4 +1,4 @@
-"""AgentAudit Python SDK — log, classify and audit AI agent actions."""
+"""AgenticAudit Python SDK — log, classify and audit AI agent actions."""
 
 __version__ = "0.1.0"
 

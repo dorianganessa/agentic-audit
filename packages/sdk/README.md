@@ -1,6 +1,6 @@
-# AgentAudit
+# AgenticAudit
 
-Python SDK for [AgentAudit](https://agentaudit.dev) — open-source compliance monitoring for AI agents.
+Python SDK for [AgenticAudit](https://agentaudit.dev) — open-source compliance monitoring for AI agents.
 
 Log every AI agent action, auto-detect PII, score risk, and map to GDPR / AI Act / SOC 2.
 

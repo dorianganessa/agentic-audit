@@ -54,6 +54,9 @@ class AuditEvent(AuditEventBase, table=True):
         Index("ix_audit_events_created_at", "created_at"),
         Index("ix_audit_events_risk_level", "risk_level"),
         Index("ix_audit_events_api_key_id", "api_key_id"),
+        # Composite indexes for common query patterns
+        Index("ix_audit_events_apikey_created", "api_key_id", "created_at"),
+        Index("ix_audit_events_apikey_risk", "api_key_id", "risk_level"),
     )
 
 

@@ -74,6 +74,6 @@ print(event.frameworks)   # {"gdpr": ["art_30"], "ai_act": ["art_14"]}
 | **Claude Code** | :white_check_mark: Full | Deterministic hooks, enterprise-enforceable |
 | **Cowork** | :white_check_mark: Full | Plugin with hooks, marketplace deployment |
 | **LangChain** | :white_check_mark: Full | Callback handler |
-| **CrewAI** | :white_check_mark: Full | Event hook |
+| **CrewAI** | :material-progress-clock: Roadmap | Event hook (planned) |
 | **Codex** | :material-progress-clock: Partial | Transcript parsing |
 | **Any agent** | :white_check_mark: Full | REST API / Python SDK |

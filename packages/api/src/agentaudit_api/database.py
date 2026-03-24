@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.orm import Session
 
 from agentaudit_api.config import Settings
@@ -24,8 +24,31 @@ def get_engine(database_url: str | None = None) -> Engine:
         return create_engine(database_url, echo=False)
     if _engine is None:
         settings = Settings()
-        _engine = create_engine(settings.database_url, echo=False)
+        if not settings.database_url:
+            raise RuntimeError(
+                "AGENTAUDIT_DATABASE_URL environment variable is required. "
+                "Example: postgresql+psycopg2://user:pass@localhost:5432/agentaudit"
+            )
+        _engine = create_engine(
+            settings.database_url,
+            echo=False,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_pool_max_overflow,
+            pool_recycle=settings.db_pool_recycle,
+            pool_pre_ping=settings.db_pool_pre_ping,
+        )
     return _engine
+
+
+def check_db_health() -> bool:
+    """Return True if the database is reachable."""
+    try:
+        engine = get_engine()
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True
+    except Exception:
+        return False
 
 
 def get_session() -> Generator[Session, None, None]:

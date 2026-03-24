@@ -1,4 +1,4 @@
-# Contributing to AgentAudit
+# Contributing to AgenticAudit
 
 Thank you for your interest in contributing! This guide will help you get started.
 
@@ -117,6 +117,18 @@ Use clear, descriptive commit messages:
 - `feat: add webhook retry with exponential backoff`
 - `docs: update self-hosting guide for ARM64`
 
+## Developer Certificate of Origin (DCO)
+
+This project uses the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) to certify that contributors have the right to submit their work under the AGPL-3.0 license.
+
+By making a contribution, you certify that you wrote the code or otherwise have the right to submit it. Sign off your commits with `git commit -s`:
+
+```
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+All commits must include this sign-off line. CI will check for it.
+
 ## Reporting Issues
 
 Use GitHub Issues. Include:
@@ -126,4 +138,4 @@ Use GitHub Issues. Include:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing, you agree that your contributions will be licensed under the AGPL-3.0.

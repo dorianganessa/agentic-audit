@@ -122,8 +122,8 @@ def create_event(
     blocked, reason = _should_block(policy, risk_level)
     decision = "block" if blocked else "allow"
 
-    # Storage decision
-    stored = _should_store(logging_level, risk_level, pii_result.detected)
+    # Storage decision — blocked events are NOT stored
+    stored = False if blocked else _should_store(logging_level, risk_level, pii_result.detected)
 
     if stored:
         event = AuditEvent(

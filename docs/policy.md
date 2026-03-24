@@ -92,7 +92,7 @@ Configure Slack webhook alerts for specific conditions:
   "alert_rules": [
     {
       "name": "Critical action alert",
-      "condition": {"risk_level": "critical"},
+      "condition": {"risk_level_gte": "critical"},
       "notify": {"slack_webhook": "https://hooks.slack.com/services/T.../B.../xxx"}
     }
   ]

@@ -1,0 +1,96 @@
+rules:
+  - id: production-shell-command
+    name: Shell command targeting production
+    description: Shell command containing 'prod' or 'production', suggesting production environment access.
+    severity: high
+    category: operational
+    tags: [production]
+
+    match:
+      all:
+        - field: action
+          eq: shell_command
+        - any:
+            - field: data.command
+              contains: prod
+            - field: data.command
+              contains: production
+
+    effects:
+      risk_level: high
+
+  - id: pii-in-production
+    name: PII detected in production environment
+    description: Personal data found in an event from a production environment.
+    severity: high
+    category: privacy
+    tags: [pii, production]
+
+    match:
+      all:
+        - field: pii_detected
+          eq: true
+        - field: context.environment
+          eq: production
+
+    effects:
+      risk_level: high
+      frameworks:
+        gdpr: personal_data_processing
+        ai_act: transparency_obligation
+
+  - id: sensitive-file-write
+    name: Write to sensitive file path
+    description: >
+      Agent is writing to a file that may contain secrets or auth config
+      (.env, auth, secret, credential, token paths).
+    severity: high
+    category: security
+    tags: [sensitive-file, write]
+
+    match:
+      all:
+        - field: action
+          eq: file_write
+        - any:
+            - field: data.file_path
+              contains: ".env"
+            - field: data.file_path
+              contains: auth
+            - field: data.file_path
+              contains: secret
+            - field: data.file_path
+              contains: credential
+            - field: data.file_path
+              contains: token
+
+    effects:
+      risk_level: high
+
+  - id: sensitive-file-read
+    name: Read sensitive file
+    description: >
+      Agent is reading a file that likely contains secrets or private keys
+      (.env, .pem, .key, id_rsa, credential paths).
+    severity: high
+    category: security
+    tags: [sensitive-file, read]
+
+    match:
+      all:
+        - field: action
+          eq: file_read
+        - any:
+            - field: data.file_path
+              contains: ".env"
+            - field: data.file_path
+              contains: ".pem"
+            - field: data.file_path
+              contains: ".key"
+            - field: data.file_path
+              contains: id_rsa
+            - field: data.file_path
+              contains: credential
+
+    effects:
+      risk_level: high

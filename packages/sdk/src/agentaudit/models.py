@@ -1,4 +1,4 @@
-"""Data models for the AgentAudit SDK."""
+"""Data models for the AgenticAudit SDK."""
 
 from __future__ import annotations
 

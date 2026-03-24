@@ -1,0 +1,60 @@
+name: Bug Report
+description: Report a bug in AgenticAudit
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a bug! Please fill out the sections below.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Set policy to ...
+        2. Send event with ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AgenticAudit Version
+      placeholder: "0.2.0"
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - API Server
+        - Python SDK
+        - Hook CLI
+        - MCP Server
+        - Cowork Plugin
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, OS, Docker version, etc.
+      placeholder: "Python 3.12, macOS 15, Docker 27"
