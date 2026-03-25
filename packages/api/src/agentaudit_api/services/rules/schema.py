@@ -6,7 +6,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, field_validator
 
-
 ConditionOperator = Literal[
     "eq", "ne", "contains", "not_contains", "matches", "in", "gt", "gte", "lt", "lte", "exists",
 ]

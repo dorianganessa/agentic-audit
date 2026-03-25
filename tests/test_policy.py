@@ -61,6 +61,7 @@ def test_policy_optimistic_lock_conflict(client, api_key_raw, monkeypatch):
 
     def stale_get_org(session, api_key):
         org = real_get_org(session, api_key)
+        session.expunge(org)  # Detach so stale version isn't auto-flushed to DB
         org.version = -1
         return org
 

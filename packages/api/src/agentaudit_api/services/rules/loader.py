@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -10,7 +9,7 @@ from typing import Any
 import yaml
 
 from agentaudit_api.services.rules.engine import RuleEngine
-from agentaudit_api.services.rules.schema import Condition, Rule, RuleFile
+from agentaudit_api.services.rules.schema import Rule, RuleFile
 
 logger = logging.getLogger(__name__)
 

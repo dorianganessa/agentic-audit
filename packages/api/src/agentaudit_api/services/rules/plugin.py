@@ -28,11 +28,10 @@ import importlib
 import importlib.util
 import logging
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
-
-from agentaudit_api.services.rules.schema import Condition, Effects, Rule
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

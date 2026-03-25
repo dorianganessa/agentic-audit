@@ -1,12 +1,15 @@
 """Tests for the YAML rules engine and Python plugin system."""
 
 import textwrap
-from pathlib import Path
 
 import pytest
-
 from agentaudit_api.services.rules.engine import RuleEngine, _resolve_field
-from agentaudit_api.services.rules.loader import load_yaml_string, load_yaml_file, load_custom_rules, create_engine
+from agentaudit_api.services.rules.loader import (
+    create_engine,
+    load_custom_rules,
+    load_yaml_file,
+    load_yaml_string,
+)
 from agentaudit_api.services.rules.plugin import (
     PluginResult,
     PluginRule,
@@ -17,7 +20,6 @@ from agentaudit_api.services.rules.plugin import (
     rule,
 )
 from agentaudit_api.services.rules.schema import Condition, Effects, Rule
-
 
 # --- Unit tests: condition evaluation ---
 
@@ -66,7 +68,13 @@ rules:
     effects:
       risk_level: critical
 """)
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "psql -c 'DROP TABLE users'"}, "context": {}})
+        result = engine.evaluate(
+            {
+                "action": "shell_command",
+                "data": {"command": "psql -c 'DROP TABLE users'"},
+                "context": {},
+            }
+        )
         assert result.risk_level == "critical"
 
     def test_matches_regex(self):
@@ -80,7 +88,13 @@ rules:
     effects:
       risk_level: critical
 """)
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "curl -H 'sk_live_abc123'"}, "context": {}})
+        result = engine.evaluate(
+            {
+                "action": "shell_command",
+                "data": {"command": "curl -H 'sk_live_abc123'"},
+                "context": {},
+            }
+        )
         assert result.risk_level == "critical"
 
     def test_all_combinator(self):
@@ -98,11 +112,15 @@ rules:
       risk_level: high
 """)
         # Both match
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "ssh prod-db"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "ssh prod-db"}, "context": {}}
+        )
         assert result.risk_level == "high"
 
         # Only one matches
-        result = engine.evaluate({"action": "file_read", "data": {"command": "ssh prod-db"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "file_read", "data": {"command": "ssh prod-db"}, "context": {}}
+        )
         assert result.risk_level == "low"
 
     def test_any_combinator(self):
@@ -143,10 +161,14 @@ rules:
     effects:
       risk_level: medium
 """)
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "deploy app"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "deploy app"}, "context": {}}
+        )
         assert result.risk_level == "medium"
 
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "pytest tests/"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "pytest tests/"}, "context": {}}
+        )
         assert result.risk_level == "low"
 
     def test_nested_any_in_all(self):
@@ -167,10 +189,14 @@ rules:
     effects:
       risk_level: critical
 """)
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "rm -rf /var"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "rm -rf /var"}, "context": {}}
+        )
         assert result.risk_level == "critical"
 
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "ls /var"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "ls /var"}, "context": {}}
+        )
         assert result.risk_level == "low"
 
     def test_exists_operator(self):
@@ -185,10 +211,14 @@ rules:
     effects:
       risk_level: medium
 """)
-        result = engine.evaluate({"action": "file_read", "data": {"file_path": "/app/main.py"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "file_read", "data": {"file_path": "/app/main.py"}, "context": {}}
+        )
         assert result.risk_level == "medium"
 
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "ls"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "shell_command", "data": {"command": "ls"}, "context": {}}
+        )
         assert result.risk_level == "low"
 
     def test_in_operator(self):
@@ -263,20 +293,24 @@ class TestBuiltinRules:
 
     def test_api_key_in_data(self, engine):
         result = self._eval(
-            engine, "shell_command",
+            engine,
+            "shell_command",
             data={"command": "curl -H 'Authorization: sk_live_abc123def456'"},
         )
         assert result.risk_level == "critical"
 
     def test_github_token(self, engine):
         result = self._eval(
-            engine, "shell_command",
+            engine,
+            "shell_command",
             data={"command": "git clone https://ghp_abc123@github.com/repo"},
         )
         assert result.risk_level == "critical"
 
     def test_aws_key(self, engine):
-        result = self._eval(engine, "shell_command", data={"command": "export AWS_KEY=AKIAIOSFODNN7EXAMPLE"})
+        result = self._eval(
+            engine, "shell_command", data={"command": "export AWS_KEY=AKIAIOSFODNN7EXAMPLE"}
+        )
         assert result.risk_level == "critical"
 
     def test_rm_rf(self, engine):
@@ -288,12 +322,15 @@ class TestBuiltinRules:
         assert result.risk_level == "critical"
 
     def test_delete_from(self, engine):
-        result = self._eval(engine, "shell_command", data={"command": "psql -c 'DELETE FROM users WHERE id=1'"})
+        result = self._eval(
+            engine, "shell_command", data={"command": "psql -c 'DELETE FROM users WHERE id=1'"}
+        )
         assert result.risk_level == "critical"
 
     def test_prod_command(self, engine):
         result = self._eval(
-            engine, "shell_command",
+            engine,
+            "shell_command",
             data={"command": "psql -h prod-db.internal -c 'SELECT email FROM users'"},
         )
         assert result.risk_level == "high"
@@ -315,7 +352,9 @@ class TestBuiltinRules:
         assert result.risk_level == "high"
 
     def test_pii_production(self, engine):
-        result = self._eval(engine, "access_record", context={"environment": "production"}, pii_detected=True)
+        result = self._eval(
+            engine, "access_record", context={"environment": "production"}, pii_detected=True
+        )
         assert result.risk_level == "high"
 
     def test_pii_detected(self, engine):
@@ -486,13 +525,15 @@ class TestScoreRiskCompat:
     """Ensure the public score_risk() API still works."""
 
     def test_score_risk_returns_string(self):
-        from agentaudit_api.services.risk_scorer import score_risk, reset_engine
+        from agentaudit_api.services.risk_scorer import reset_engine, score_risk
+
         reset_engine()
         result = score_risk("access_credential", {}, {}, pii_detected=False)
         assert result == "critical"
 
     def test_score_risk_innocuous(self):
-        from agentaudit_api.services.risk_scorer import score_risk, reset_engine
+        from agentaudit_api.services.risk_scorer import reset_engine, score_risk
+
         reset_engine()
         result = score_risk("shell_command", {"command": "ls"}, {}, pii_detected=False)
         assert result == "low"
@@ -580,7 +621,9 @@ class TestPluginEvaluation:
             category="security",
             tags=[],
             enabled=True,
-            fn=lambda event: PluginResult(risk_level="high") if event.get("action") == "dangerous" else None,
+            fn=lambda event: (
+                PluginResult(risk_level="high") if event.get("action") == "dangerous" else None
+            ),
         )
         engine = RuleEngine(plugins=[plugin])
 
@@ -642,6 +685,7 @@ class TestPluginEvaluation:
 
     def test_plugin_error_does_not_crash(self):
         """Plugin that raises should be caught, not crash the engine."""
+
         def bad_plugin(event):
             raise ValueError("intentional error")
 
@@ -758,7 +802,8 @@ class TestPluginFileLoading:
 
     def test_load_plugin_from_file(self, tmp_path):
         plugin_file = tmp_path / "my_rules.py"
-        plugin_file.write_text(textwrap.dedent("""\
+        plugin_file.write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(
@@ -771,7 +816,8 @@ class TestPluginFileLoading:
                 if "dangerous" in event.get("action", ""):
                     return PluginResult(risk_level="high", tags=["from-file"])
                 return None
-        """))
+        """)
+        )
 
         plugins = load_plugin_file(plugin_file)
         assert len(plugins) == 1
@@ -788,7 +834,8 @@ class TestPluginFileLoading:
 
     def test_load_plugin_directory(self, tmp_path):
         # Create two plugin files
-        (tmp_path / "rule_a.py").write_text(textwrap.dedent("""\
+        (tmp_path / "rule_a.py").write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(id="plugin-a", name="Plugin A", severity="medium")
@@ -796,8 +843,10 @@ class TestPluginFileLoading:
                 if event.get("action") == "action_a":
                     return PluginResult(risk_level="medium")
                 return None
-        """))
-        (tmp_path / "rule_b.py").write_text(textwrap.dedent("""\
+        """)
+        )
+        (tmp_path / "rule_b.py").write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(id="plugin-b", name="Plugin B", severity="high")
@@ -805,7 +854,8 @@ class TestPluginFileLoading:
                 if event.get("action") == "action_b":
                     return PluginResult(risk_level="high")
                 return None
-        """))
+        """)
+        )
         # Files starting with _ should be skipped
         (tmp_path / "_ignored.py").write_text("raise Exception('should not be loaded')")
 
@@ -816,13 +866,15 @@ class TestPluginFileLoading:
         assert "plugin-b" in ids
 
     def test_broken_plugin_file_skipped(self, tmp_path):
-        (tmp_path / "good.py").write_text(textwrap.dedent("""\
+        (tmp_path / "good.py").write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(id="good-plugin", name="Good Plugin")
             def good(event):
                 return PluginResult(risk_level="low")
-        """))
+        """)
+        )
         (tmp_path / "bad.py").write_text("raise SyntaxError('broken')")
 
         plugins = load_plugin_directory(tmp_path)
@@ -836,7 +888,8 @@ class TestCustomYamlFileLoading:
 
     def test_load_yaml_from_file(self, tmp_path):
         rule_file = tmp_path / "custom_rules.yaml"
-        rule_file.write_text(textwrap.dedent("""\
+        rule_file.write_text(
+            textwrap.dedent("""\
             rules:
               - id: custom-file-rule
                 name: Custom File Rule
@@ -848,19 +901,27 @@ class TestCustomYamlFileLoading:
                 effects:
                   risk_level: high
                   tags: [custom, internal]
-        """))
+        """)
+        )
 
         rules = load_yaml_file(rule_file)
         assert len(rules) == 1
         assert rules[0].id == "custom-file-rule"
 
         engine = RuleEngine(rules=rules)
-        result = engine.evaluate({"action": "shell_command", "data": {"command": "internal-tool --deploy"}, "context": {}})
+        result = engine.evaluate(
+            {
+                "action": "shell_command",
+                "data": {"command": "internal-tool --deploy"},
+                "context": {},
+            }
+        )
         assert result.risk_level == "high"
         assert "custom" in result.tags
 
     def test_load_custom_rules_directory(self, tmp_path):
-        (tmp_path / "team_rules.yaml").write_text(textwrap.dedent("""\
+        (tmp_path / "team_rules.yaml").write_text(
+            textwrap.dedent("""\
             rules:
               - id: team-rule-1
                 name: Team Rule 1
@@ -870,8 +931,10 @@ class TestCustomYamlFileLoading:
                 effects:
                   risk_level: critical
                   block: true
-        """))
-        (tmp_path / "compliance_rules.yaml").write_text(textwrap.dedent("""\
+        """)
+        )
+        (tmp_path / "compliance_rules.yaml").write_text(
+            textwrap.dedent("""\
             rules:
               - id: compliance-rule-1
                 name: Compliance Rule 1
@@ -882,7 +945,8 @@ class TestCustomYamlFileLoading:
                   risk_level: medium
                   frameworks:
                     gdpr: cross_border_transfer
-        """))
+        """)
+        )
 
         rules = load_custom_rules(tmp_path)
         assert len(rules) == 2
@@ -914,7 +978,8 @@ class TestCreateEngineWithPlugins:
         clear_registry()
 
     def test_engine_with_builtin_and_plugins(self, tmp_path):
-        (tmp_path / "my_plugin.py").write_text(textwrap.dedent("""\
+        (tmp_path / "my_plugin.py").write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(id="engine-test-plugin", name="Engine Test Plugin", severity="critical")
@@ -923,7 +988,8 @@ class TestCreateEngineWithPlugins:
                 if "INTERNAL_SECRET" in cmd:
                     return PluginResult(risk_level="critical", tags=["internal-secret"])
                 return None
-        """))
+        """)
+        )
 
         engine = create_engine(include_builtin=True, plugin_dirs=[tmp_path])
 
@@ -932,16 +998,20 @@ class TestCreateEngineWithPlugins:
         assert result.risk_level == "critical"
 
         # Plugin should also work
-        result = engine.evaluate({
-            "action": "shell_command",
-            "data": {"command": "echo INTERNAL_SECRET=abc123"},
-            "context": {},
-        })
+        result = engine.evaluate(
+            {
+                "action": "shell_command",
+                "data": {"command": "echo INTERNAL_SECRET=abc123"},
+                "context": {},
+            }
+        )
         assert result.risk_level == "critical"
         assert "internal-secret" in result.tags
 
         # Something that matches neither
-        result = engine.evaluate({"action": "file_read", "data": {"file_path": "/app/main.py"}, "context": {}})
+        result = engine.evaluate(
+            {"action": "file_read", "data": {"file_path": "/app/main.py"}, "context": {}}
+        )
         assert result.risk_level == "low"
 
     def test_engine_with_custom_yaml_and_plugins(self, tmp_path):
@@ -950,7 +1020,8 @@ class TestCreateEngineWithPlugins:
         plugin_dir = tmp_path / "plugins"
         plugin_dir.mkdir()
 
-        (yaml_dir / "rules.yaml").write_text(textwrap.dedent("""\
+        (yaml_dir / "rules.yaml").write_text(
+            textwrap.dedent("""\
             rules:
               - id: yaml-custom
                 name: YAML Custom
@@ -960,8 +1031,10 @@ class TestCreateEngineWithPlugins:
                 effects:
                   risk_level: medium
                   tags: [yaml-custom]
-        """))
-        (plugin_dir / "plugin.py").write_text(textwrap.dedent("""\
+        """)
+        )
+        (plugin_dir / "plugin.py").write_text(
+            textwrap.dedent("""\
             from agentaudit_api.services.rules.plugin import rule, PluginResult
 
             @rule(id="py-custom", name="Python Custom", severity="high")
@@ -969,7 +1042,8 @@ class TestCreateEngineWithPlugins:
                 if event.get("action") == "custom_action":
                     return PluginResult(risk_level="high", tags=["py-custom"])
                 return None
-        """))
+        """)
+        )
 
         engine = create_engine(
             include_builtin=False,
@@ -992,13 +1066,18 @@ class TestPluginComplexLogic:
 
     def test_cross_field_correlation(self):
         """Plugin that correlates multiple fields with custom logic."""
+
         def cross_field_check(event):
             data = event.get("data") or {}
             context = event.get("context") or {}
             # Flag: agent writing to sensitive path outside working hours
             file_path = data.get("file_path", "")
             hour = context.get("hour")
-            if any(s in file_path for s in [".env", "secret"]) and hour is not None and (hour < 6 or hour > 22):
+            if (
+                any(s in file_path for s in [".env", "secret"])
+                and hour is not None
+                and (hour < 6 or hour > 22)
+            ):
                 return PluginResult(
                     risk_level="critical",
                     tags=["after-hours-sensitive-write"],
@@ -1019,29 +1098,35 @@ class TestPluginComplexLogic:
         engine = RuleEngine(plugins=[plugin])
 
         # After hours + sensitive file → critical + block
-        result = engine.evaluate({
-            "action": "file_write",
-            "data": {"file_path": "/app/.env.production"},
-            "context": {"hour": 3},
-        })
+        result = engine.evaluate(
+            {
+                "action": "file_write",
+                "data": {"file_path": "/app/.env.production"},
+                "context": {"hour": 3},
+            }
+        )
         assert result.risk_level == "critical"
         assert result.block is True
         assert "after-hours-sensitive-write" in result.tags
 
         # Business hours + sensitive file → no match
-        result = engine.evaluate({
-            "action": "file_write",
-            "data": {"file_path": "/app/.env.production"},
-            "context": {"hour": 14},
-        })
+        result = engine.evaluate(
+            {
+                "action": "file_write",
+                "data": {"file_path": "/app/.env.production"},
+                "context": {"hour": 14},
+            }
+        )
         assert result.risk_level == "low"
 
         # After hours + normal file → no match
-        result = engine.evaluate({
-            "action": "file_write",
-            "data": {"file_path": "/app/main.py"},
-            "context": {"hour": 3},
-        })
+        result = engine.evaluate(
+            {
+                "action": "file_write",
+                "data": {"file_path": "/app/main.py"},
+                "context": {"hour": 3},
+            }
+        )
         assert result.risk_level == "low"
 
     def test_stateful_rate_detection(self):
