@@ -98,8 +98,8 @@ def compliance_report_pdf(
 
     # Oldest event
     oldest = (
-        session.query(AuditEvent.created_at)
-        .filter(AuditEvent.api_key_id == api_key.id)  # type: ignore[arg-type]
+        session.query(AuditEvent.created_at)  # type: ignore[call-overload]
+        .filter(AuditEvent.api_key_id == api_key.id)
         .order_by(AuditEvent.created_at.asc())  # type: ignore[attr-defined]
         .first()
     )

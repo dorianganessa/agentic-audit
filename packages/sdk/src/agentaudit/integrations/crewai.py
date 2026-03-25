@@ -17,7 +17,7 @@ from agentaudit.client import AgentAudit
 logger = logging.getLogger(__name__)
 
 
-class AgentAuditEventListener(BaseEventListener):
+class AgentAuditEventListener(BaseEventListener):  # type: ignore[misc]
     """CrewAI event listener that logs agent actions to AgenticAudit.
 
     Usage::

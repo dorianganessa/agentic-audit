@@ -244,10 +244,10 @@ def _apply_operator(op: str, field_value: Any, expected: Any) -> bool:
         return (field_value is not None and field_value != "") == bool(expected)
 
     if op == "eq":
-        return field_value == expected
+        return bool(field_value == expected)
 
     if op == "ne":
-        return field_value != expected
+        return bool(field_value != expected)
 
     if op == "contains":
         if field_value is None:

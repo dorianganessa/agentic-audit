@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from agentaudit_api.services.rules.engine import RuleEngine
 from agentaudit_api.services.rules.schema import Rule, RuleFile

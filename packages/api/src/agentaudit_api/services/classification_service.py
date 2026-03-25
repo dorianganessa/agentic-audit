@@ -104,8 +104,8 @@ def suggest_classification(
         }
 
     agent_clauses = _build_agent_id_filter(system.agent_id_patterns)
-    base_filter = [
-        AuditEvent.api_key_id == api_key_id,  # type: ignore[arg-type]
+    base_filter: list[Any] = [
+        AuditEvent.api_key_id == api_key_id,
         or_(*agent_clauses),
     ]
 

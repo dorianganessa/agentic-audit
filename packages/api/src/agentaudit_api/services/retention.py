@@ -39,8 +39,8 @@ def purge_expired_events(retention_days: int | None = None) -> int:
     with Session(engine) as session:
         while True:
             ids = (
-                session.query(AuditEvent.id)
-                .filter(AuditEvent.created_at < cutoff)  # type: ignore[arg-type]
+                session.query(AuditEvent.id)  # type: ignore[call-overload]
+                .filter(AuditEvent.created_at < cutoff)
                 .limit(BATCH_SIZE)
                 .all()
             )
@@ -49,7 +49,7 @@ def purge_expired_events(retention_days: int | None = None) -> int:
             id_list = [row[0] for row in ids]
             deleted = (
                 session.query(AuditEvent)
-                .filter(AuditEvent.id.in_(id_list))  # type: ignore[union-attr]
+                .filter(AuditEvent.id.in_(id_list))  # type: ignore[attr-defined]
                 .delete(synchronize_session=False)
             )
             session.commit()

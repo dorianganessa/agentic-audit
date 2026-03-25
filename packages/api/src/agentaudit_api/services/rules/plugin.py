@@ -72,7 +72,7 @@ def rule(
     category: str = "general",
     tags: list[str] | None = None,
     enabled: bool = True,
-) -> Callable[[Callable], Callable]:
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to register a Python function as a rule.
 
     The decorated function receives an event dict and returns a
@@ -88,7 +88,7 @@ def rule(
         enabled: Whether the rule is active.
     """
 
-    def decorator(fn: Callable[[dict[str, Any]], PluginResult | None]) -> Callable:
+    def decorator(fn: Callable[[dict[str, Any]], PluginResult | None]) -> Callable[..., Any]:
         plugin_rule = PluginRule(
             id=id,
             name=name,

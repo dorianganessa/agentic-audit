@@ -82,7 +82,7 @@ def update_policy(
 
     stmt = (
         update(Organization)
-        .where(Organization.id == org.id, Organization.version == old_version)
+        .where(Organization.id == org.id, Organization.version == old_version)  # type: ignore[arg-type]
         .values(
             policy=current_policy,
             version=old_version + 1,
@@ -90,7 +90,7 @@ def update_policy(
         )
     )
     result = session.execute(stmt)
-    if result.rowcount == 0:
+    if result.rowcount == 0:  # type: ignore[attr-defined]
         raise HTTPException(status_code=409, detail="Policy was modified concurrently. Retry.")
     session.commit()
 

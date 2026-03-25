@@ -62,7 +62,7 @@ def list_systems(
     query = session.query(AISystem).filter(AISystem.org_id == org_id)  # type: ignore[arg-type]
     if not include_inactive:
         query = query.filter(AISystem.is_active.is_(True))  # type: ignore[attr-defined]
-    return query.order_by(AISystem.name).all()  # type: ignore[return-value]
+    return query.order_by(AISystem.name).all()
 
 
 def update_system(
@@ -96,7 +96,7 @@ def _build_agent_id_filter(patterns: list[str]) -> list[Any]:
         # Escape SQL LIKE metacharacters before converting our wildcards
         escaped = pattern.replace("%", r"\%").replace("_", r"\_")
         sql_pattern = escaped.replace("*", "%")
-        clauses.append(AuditEvent.agent_id.like(sql_pattern))  # type: ignore[union-attr]
+        clauses.append(AuditEvent.agent_id.like(sql_pattern))  # type: ignore[attr-defined]
     return clauses
 
 
@@ -145,8 +145,8 @@ def get_system_event_stats(
         }
 
     agent_clauses = _build_agent_id_filter(system.agent_id_patterns)
-    base_filter = [
-        AuditEvent.api_key_id == api_key_id,  # type: ignore[arg-type]
+    base_filter: list[Any] = [
+        AuditEvent.api_key_id == api_key_id,
         or_(*agent_clauses),
     ]
 

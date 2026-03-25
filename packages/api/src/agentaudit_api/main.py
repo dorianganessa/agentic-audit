@@ -39,7 +39,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> StarletteResponse:
         # Skip health check
         if request.url.path == "/health":
-            return await call_next(request)
+            response: StarletteResponse = await call_next(request)
+            return response
 
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -62,7 +63,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
 
         self._requests[key].append(now)
-        return await call_next(request)
+        response = await call_next(request)
+        return response
 
 
 def create_app(database_url: str | None = None) -> FastAPI:
