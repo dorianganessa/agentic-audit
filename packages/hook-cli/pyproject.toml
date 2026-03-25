@@ -1,6 +1,6 @@
 [project]
 name = "agentic-audit-hook"
-version = "0.1.1"
+version = "0.3.0"
 description = "CLI hook for Claude Code and Cowork — automatic compliance monitoring for AI coding agents"
 readme = "README.md"
 license = {text = "AGPL-3.0"}

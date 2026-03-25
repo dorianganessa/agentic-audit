@@ -1,6 +1,6 @@
 [project]
 name = "agentaudit-workspace"
-version = "0.1.0"
+version = "0.3.0"
 description = "Log, classify and audit every AI agent action for GDPR/AI Act/SOC2 compliance"
 requires-python = ">=3.12"
 dependencies = [
