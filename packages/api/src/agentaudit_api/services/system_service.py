@@ -131,9 +131,20 @@ def get_events_for_system(
 def get_system_event_stats(
     session: Session,
     system: AISystem,
-    api_key_id: str,
+    api_key_id: str | None = None,
+    *,
+    org_id: str | None = None,
 ) -> dict[str, Any]:
-    """Get aggregate event statistics for a system."""
+    """Get aggregate event statistics for a system.
+
+    Supports dual scoping:
+    - api_key_id: scope to events from a specific API key (event API use)
+    - org_id: scope to all events from any key in the org (compliance use,
+      survives API key rotation)
+
+    At least one of api_key_id or org_id must be provided.
+    """
+    from agentaudit_api.models.api_key import ApiKey
     from sqlalchemy import func
 
     if not system.agent_id_patterns:
@@ -145,10 +156,31 @@ def get_system_event_stats(
         }
 
     agent_clauses = _build_agent_id_filter(system.agent_id_patterns)
-    base_filter: list[Any] = [
-        AuditEvent.api_key_id == api_key_id,
-        or_(*agent_clauses),
-    ]
+
+    if org_id is not None:
+        # Org-scoped: find all api_key_ids for this org, then filter events
+        org_key_ids = [
+            k.id
+            for k in session.query(ApiKey.id).filter(ApiKey.org_id == org_id).all()
+        ]
+        if not org_key_ids:
+            return {
+                "total_events": 0,
+                "by_risk_level": {},
+                "by_action": {},
+                "pii_events": 0,
+            }
+        base_filter: list[Any] = [
+            AuditEvent.api_key_id.in_(org_key_ids),  # type: ignore[attr-defined]
+            or_(*agent_clauses),
+        ]
+    elif api_key_id is not None:
+        base_filter = [
+            AuditEvent.api_key_id == api_key_id,
+            or_(*agent_clauses),
+        ]
+    else:
+        raise ValueError("Either api_key_id or org_id must be provided")
 
     total = session.query(AuditEvent).filter(*base_filter).count()
 

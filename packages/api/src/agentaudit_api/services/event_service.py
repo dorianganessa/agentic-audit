@@ -14,6 +14,7 @@ from agentaudit_api.models.event import (
     AuditEventCreate,
     AuditEventRead,
 )
+from agentaudit_api.models.blocking_log import BlockingLog
 from agentaudit_api.models.organization import DEFAULT_POLICY, Organization
 from agentaudit_api.services.framework_mapper import map_frameworks
 from agentaudit_api.services.pii_detector import detect_pii
@@ -121,6 +122,27 @@ def create_event(
     # Blocking decision
     blocked, reason = _should_block(policy, risk_level)
     decision = "block" if blocked else "allow"
+
+    # Record blocking evidence for compliance (Art. 14 Human Oversight)
+    if blocked:
+        try:
+            log_entry = BlockingLog(
+                org_id=org_id or "",
+                agent_id=event_data.agent_id,
+                action=event_data.action,
+                risk_level=risk_level,
+                block_reason=reason or "Unknown",
+            )
+            session.add(log_entry)
+            session.commit()
+        except Exception:
+            session.rollback()
+            logger.error(
+                "Failed to write blocking log for action=%s agent=%s",
+                event_data.action,
+                event_data.agent_id,
+                exc_info=True,
+            )
 
     # Storage decision — blocked events are NOT stored
     stored = False if blocked else _should_store(logging_level, risk_level, pii_result.detected)

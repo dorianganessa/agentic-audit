@@ -51,3 +51,6 @@ site_docs/
 
 # MCP config (contains API keys)
 .mcp.json
+
+# Enterprise (private repo — not tracked in OSS)
+enterprise/
