@@ -377,17 +377,21 @@ def compliance_page(
     deadlines: list[dict[str, Any]] = []
     for s in systems:
         if s.next_review_date and s.next_review_date > now:
-            deadlines.append({
-                "system": s.name,
-                "type": "system_review",
-                "date": s.next_review_date.isoformat(),
-            })
+            deadlines.append(
+                {
+                    "system": s.name,
+                    "type": "system_review",
+                    "date": s.next_review_date.isoformat(),
+                }
+            )
         if s.fria_next_review and s.fria_next_review > now:
-            deadlines.append({
-                "system": s.name,
-                "type": "fria_review",
-                "date": s.fria_next_review.isoformat(),
-            })
+            deadlines.append(
+                {
+                    "system": s.name,
+                    "type": "fria_review",
+                    "date": s.fria_next_review.isoformat(),
+                }
+            )
     deadlines.sort(key=lambda d: d["date"])
 
     return templates.TemplateResponse(

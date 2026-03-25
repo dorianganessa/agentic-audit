@@ -67,7 +67,8 @@ def test_classification_high_risk_from_pii_and_risk(client, api_key_raw):
     # Create events with PII and HR-related data
     for i in range(5):
         _create_event(
-            client, api_key_raw,
+            client,
+            api_key_raw,
             agent_id="hr-bot-1",
             action="file_read",
             data={
@@ -80,7 +81,8 @@ def test_classification_high_risk_from_pii_and_risk(client, api_key_raw):
     # Create some high-risk events
     for i in range(3):
         _create_event(
-            client, api_key_raw,
+            client,
+            api_key_raw,
             agent_id="hr-bot-1",
             action="shell_command",
             data={
@@ -89,7 +91,8 @@ def test_classification_high_risk_from_pii_and_risk(client, api_key_raw):
         )
 
     system = _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="HR Bot",
         agent_id_patterns=["hr-bot-*"],
     )
@@ -112,14 +115,16 @@ def test_classification_minimal_for_safe_operations(client, api_key_raw):
 
     for i in range(5):
         _create_event(
-            client, api_key_raw,
+            client,
+            api_key_raw,
             agent_id="safe-bot",
             action="file_read",
             data={"file_path": f"/docs/readme_{i}.txt", "command": "cat readme.txt"},
         )
 
     system = _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Safe Bot",
         agent_id_patterns=["safe-bot"],
     )
@@ -160,7 +165,8 @@ def test_compliance_status_full_compliance(client, api_key_raw):
 
     # Create a classified system with contract and FRIA done
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Compliant Bot",
         agent_id_patterns=["compliant-*"],
         risk_classification="high",
@@ -186,7 +192,8 @@ def test_compliance_status_partial_compliance(client, api_key_raw):
 
     # No retention set (defaults to whatever config says — likely < 180)
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Unfinished Bot",
         risk_classification="high",
         fria_status="not_started",
@@ -209,7 +216,8 @@ def test_compliance_status_prohibited_system_detected(client, api_key_raw):
     h = _headers(api_key_raw)
 
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Banned System",
         risk_classification="prohibited",
         contract_has_ai_annex=True,
@@ -227,7 +235,8 @@ def test_compliance_deadlines(client, api_key_raw):
 
     future = (datetime.now(UTC) + timedelta(days=30)).isoformat()
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Reviewed Bot",
         risk_classification="high",
         fria_status="completed",
@@ -252,7 +261,8 @@ def test_compliance_report_pdf_downloads(client, api_key_raw):
     h = _headers(api_key_raw)
 
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Report Bot",
         risk_classification="limited",
         contract_has_ai_annex=True,
@@ -283,12 +293,16 @@ def test_fria_pdf_downloads(client, api_key_raw):
 
     # Create some events first
     _create_event(
-        client, api_key_raw,
-        agent_id="fria-bot", action="file_read", data={"file_path": "/data/x"},
+        client,
+        api_key_raw,
+        agent_id="fria-bot",
+        action="file_read",
+        data={"file_path": "/data/x"},
     )
 
     system = _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="FRIA Test Bot",
         agent_id_patterns=["fria-bot"],
         risk_classification="high",
@@ -318,7 +332,8 @@ def test_fria_pdf_employment_vs_nonemployment(client, api_key_raw):
     h = _headers(api_key_raw)
 
     employment_sys = _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="HR Assessment",
         agent_id_patterns=["hr-assessment-*"],
         risk_classification="high",
@@ -326,7 +341,8 @@ def test_fria_pdf_employment_vs_nonemployment(client, api_key_raw):
     )
 
     generic_sys = _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Generic Bot",
         agent_id_patterns=["generic-assessment-*"],
         risk_classification="high",
@@ -409,7 +425,8 @@ def test_compliance_dashboard_renders(client, api_key_raw):
     """Compliance dashboard page returns HTML with expected content."""
     _set_dashboard_cookie(client, api_key_raw)
     _create_system(
-        client, api_key_raw,
+        client,
+        api_key_raw,
         name="Dashboard Bot",
         risk_classification="high",
         fria_status="completed",

@@ -198,9 +198,7 @@ class AgentAudit:
 
     def get_classification_suggestion(self, system_id: str) -> dict[str, Any]:
         """Get AI Act risk classification suggestion for a system."""
-        response = self._client.get(
-            f"/v1/systems/{system_id}/classification-suggestion"
-        )
+        response = self._client.get(f"/v1/systems/{system_id}/classification-suggestion")
         _handle_error_response(response)
         return response.json()  # type: ignore[no-any-return]
 
@@ -308,9 +306,7 @@ class AsyncAgentAudit:
 
     async def get_classification_suggestion(self, system_id: str) -> dict[str, Any]:
         """Get AI Act risk classification suggestion for a system."""
-        response = await self._client.get(
-            f"/v1/systems/{system_id}/classification-suggestion"
-        )
+        response = await self._client.get(f"/v1/systems/{system_id}/classification-suggestion")
         _handle_error_response(response)
         return response.json()  # type: ignore[no-any-return]
 

@@ -42,9 +42,7 @@ def compliance_status(
     retention = policy.get("retention_days", settings.retention_days)
 
     total_systems = len(systems)
-    classified = sum(
-        1 for s in systems if s.risk_classification != "unclassified"
-    )
+    classified = sum(1 for s in systems if s.risk_classification != "unclassified")
     high_risk = [s for s in systems if s.risk_classification == "high"]
     fria_completed = sum(1 for s in high_risk if s.fria_status == "completed")
     contracts_ok = sum(1 for s in systems if s.contract_has_ai_annex)
@@ -54,12 +52,8 @@ def compliance_status(
     checks = {
         "all_classified": total_systems > 0 and classified == total_systems,
         "no_prohibited": len(prohibited) == 0,
-        "fria_complete": (
-            len(high_risk) == 0 or fria_completed == len(high_risk)
-        ),
-        "contracts_reviewed": (
-            total_systems == 0 or contracts_ok == total_systems
-        ),
+        "fria_complete": (len(high_risk) == 0 or fria_completed == len(high_risk)),
+        "contracts_reviewed": (total_systems == 0 or contracts_ok == total_systems),
         "retention_compliant": retention >= 180,
     }
     score = int(sum(checks.values()) / len(checks) * 100) if checks else 0
@@ -173,16 +167,20 @@ def _get_deadlines(systems: list[AISystem]) -> list[dict[str, Any]]:
     now = datetime.now(UTC).replace(tzinfo=None)
     for s in systems:
         if s.next_review_date and s.next_review_date > now:
-            deadlines.append({
-                "system": s.name,
-                "type": "system_review",
-                "date": s.next_review_date.isoformat(),
-            })
+            deadlines.append(
+                {
+                    "system": s.name,
+                    "type": "system_review",
+                    "date": s.next_review_date.isoformat(),
+                }
+            )
         if s.fria_next_review and s.fria_next_review > now:
-            deadlines.append({
-                "system": s.name,
-                "type": "fria_review",
-                "date": s.fria_next_review.isoformat(),
-            })
+            deadlines.append(
+                {
+                    "system": s.name,
+                    "type": "fria_review",
+                    "date": s.fria_next_review.isoformat(),
+                }
+            )
     deadlines.sort(key=lambda d: d["date"])
     return deadlines

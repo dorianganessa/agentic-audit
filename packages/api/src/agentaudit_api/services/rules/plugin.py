@@ -87,6 +87,7 @@ def rule(
         tags: Tags applied when the rule matches.
         enabled: Whether the rule is active.
     """
+
     def decorator(fn: Callable[[dict[str, Any]], PluginResult | None]) -> Callable:
         plugin_rule = PluginRule(
             id=id,

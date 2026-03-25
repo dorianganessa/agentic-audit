@@ -17,32 +17,68 @@ logger = logging.getLogger(__name__)
 # Keywords in event data that hint at Annex III categories
 _CATEGORY_SIGNALS: dict[str, list[str]] = {
     "employment": [
-        "hr", "recruit", "hiring", "candidate", "resume", "cv",
-        "employee", "salary", "payroll", "performance review",
-        "termination", "promotion",
+        "hr",
+        "recruit",
+        "hiring",
+        "candidate",
+        "resume",
+        "cv",
+        "employee",
+        "salary",
+        "payroll",
+        "performance review",
+        "termination",
+        "promotion",
     ],
     "education": [
-        "student", "grade", "transcript", "enrollment", "school",
-        "university", "exam", "course",
+        "student",
+        "grade",
+        "transcript",
+        "enrollment",
+        "school",
+        "university",
+        "exam",
+        "course",
     ],
     "essential_services": [
-        "credit", "loan", "insurance", "mortgage", "benefit",
-        "social security", "welfare",
+        "credit",
+        "loan",
+        "insurance",
+        "mortgage",
+        "benefit",
+        "social security",
+        "welfare",
     ],
     "law_enforcement": [
-        "arrest", "criminal", "suspect", "warrant", "forensic",
-        "surveillance", "detention",
+        "arrest",
+        "criminal",
+        "suspect",
+        "warrant",
+        "forensic",
+        "surveillance",
+        "detention",
     ],
     "biometric": [
-        "face", "fingerprint", "iris", "voice recognition",
-        "biometric", "facial",
+        "face",
+        "fingerprint",
+        "iris",
+        "voice recognition",
+        "biometric",
+        "facial",
     ],
     "critical_infrastructure": [
-        "scada", "power grid", "water treatment", "nuclear",
+        "scada",
+        "power grid",
+        "water treatment",
+        "nuclear",
         "traffic control",
     ],
     "migration": [
-        "visa", "asylum", "border", "immigration", "passport",
+        "visa",
+        "asylum",
+        "border",
+        "immigration",
+        "passport",
     ],
 }
 
@@ -135,29 +171,23 @@ def suggest_classification(
     if high_critical > 0 and high_critical / total >= 0.1:
         suggested = "high"
         reasons.append(
-            f"{high_critical}/{total} events are high/critical risk"
-            f" ({high_critical / total:.0%})"
+            f"{high_critical}/{total} events are high/critical risk ({high_critical / total:.0%})"
         )
 
     if pii_ratio >= 0.2:
         if suggested != "high":
             suggested = "limited"
-        reasons.append(
-            f"{pii_count}/{total} events contain PII ({pii_ratio:.0%})"
-        )
+        reasons.append(f"{pii_count}/{total} events contain PII ({pii_ratio:.0%})")
 
     if suggested_category in ("employment", "biometric", "law_enforcement"):
         suggested = "high"
-        reasons.append(
-            f"Data patterns suggest Annex III category: {suggested_category}"
-        )
+        reasons.append(f"Data patterns suggest Annex III category: {suggested_category}")
 
     if "connector_access" in by_action:
         if suggested == "minimal":
             suggested = "limited"
         reasons.append(
-            f"System accesses external connectors"
-            f" ({by_action['connector_access']} events)"
+            f"System accesses external connectors ({by_action['connector_access']} events)"
         )
 
     if not reasons:

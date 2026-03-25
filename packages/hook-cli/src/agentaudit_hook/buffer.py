@@ -105,7 +105,8 @@ def flush_buffer(
         # Atomically replace buffer contents using a temp file in the same dir
         if failed:
             tmp_fd, tmp_path = tempfile.mkstemp(
-                dir=str(path.parent), suffix=".tmp",
+                dir=str(path.parent),
+                suffix=".tmp",
             )
             try:
                 os.write(tmp_fd, ("\n".join(failed) + "\n").encode())
