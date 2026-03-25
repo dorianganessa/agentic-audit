@@ -49,23 +49,23 @@ def test_update_policy_partial(client, api_key_raw):
     assert data["frameworks"]["ai_act"] is False
 
 
-def test_policy_optimistic_lock_conflict(client, api_key_raw, db_url):
+def test_policy_optimistic_lock_conflict(client, api_key_raw, monkeypatch):
     """Concurrent policy updates should fail with 409 when version conflicts."""
-    from sqlalchemy import create_engine, update
-    from sqlalchemy.orm import Session as SASession
+    from agentaudit_api.api import org as org_module
 
-    from agentaudit_api.models.organization import Organization
-
-    # First, do a normal update to get a known state
     _set_policy(client, api_key_raw, logging_level="full")
 
-    # Simulate a concurrent update by directly bumping the version in the DB
-    engine = create_engine(db_url)
-    with SASession(engine) as db_session:
-        db_session.execute(update(Organization).values(version=999))
-        db_session.commit()
+    # Monkeypatch get_org to return an org with a stale version,
+    # simulating another request changing the version between read and write.
+    real_get_org = org_module.get_org
 
-    # Now the API's next update should fail because the version doesn't match
+    def stale_get_org(session, api_key):
+        org = real_get_org(session, api_key)
+        org.version = -1
+        return org
+
+    monkeypatch.setattr(org_module, "get_org", stale_get_org)
+
     response = client.put(
         "/v1/org/policy",
         json={"logging_level": "paranoid"},
