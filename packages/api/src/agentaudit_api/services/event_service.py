@@ -9,12 +9,12 @@ from typing import Any
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
+from agentaudit_api.models.blocking_log import BlockingLog
 from agentaudit_api.models.event import (
     AuditEvent,
     AuditEventCreate,
     AuditEventRead,
 )
-from agentaudit_api.models.blocking_log import BlockingLog
 from agentaudit_api.models.organization import DEFAULT_POLICY, Organization
 from agentaudit_api.services.framework_mapper import map_frameworks
 from agentaudit_api.services.pii_detector import detect_pii

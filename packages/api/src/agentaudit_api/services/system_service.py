@@ -144,8 +144,9 @@ def get_system_event_stats(
 
     At least one of api_key_id or org_id must be provided.
     """
-    from agentaudit_api.models.api_key import ApiKey
     from sqlalchemy import func
+
+    from agentaudit_api.models.api_key import ApiKey
 
     if not system.agent_id_patterns:
         return {
