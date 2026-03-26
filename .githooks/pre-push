@@ -21,6 +21,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Type checking
+echo "  Running mypy..."
+uv run mypy packages/ --strict 2>&1 | tail -3
+if [ $? -ne 0 ]; then
+    echo "❌ Mypy type check failed. Fix errors before pushing."
+    exit 1
+fi
+
 # Tests
 echo "  Running tests..."
 uv run pytest tests/ -x -q --tb=short 2>&1 | tail -5
