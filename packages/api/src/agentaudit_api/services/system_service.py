@@ -160,10 +160,7 @@ def get_system_event_stats(
 
     if org_id is not None:
         # Org-scoped: find all api_key_ids for this org, then filter events
-        org_key_ids = [
-            k.id
-            for k in session.query(ApiKey.id).filter(ApiKey.org_id == org_id).all()
-        ]
+        org_key_ids = [k.id for k in session.query(ApiKey.id).filter(ApiKey.org_id == org_id).all()]
         if not org_key_ids:
             return {
                 "total_events": 0,
