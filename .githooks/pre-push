@@ -1,0 +1,32 @@
+#!/bin/bash
+# Pre-push hook: run ruff lint + pytest before pushing
+# Install: git config core.hooksPath .githooks
+
+set -e
+
+echo "🔍 Running pre-push checks..."
+
+# Lint
+echo "  Running ruff..."
+uv run ruff check . --quiet
+if [ $? -ne 0 ]; then
+    echo "❌ Ruff lint failed. Fix errors before pushing."
+    exit 1
+fi
+
+echo "  Running ruff format check..."
+uv run ruff format --check . --quiet
+if [ $? -ne 0 ]; then
+    echo "❌ Ruff format check failed. Run 'uv run ruff format .' to fix."
+    exit 1
+fi
+
+# Tests
+echo "  Running tests..."
+uv run pytest tests/ -x -q --tb=short 2>&1 | tail -5
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+    echo "❌ Tests failed. Fix before pushing."
+    exit 1
+fi
+
+echo "✅ All pre-push checks passed."
