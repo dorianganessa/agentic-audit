@@ -4,35 +4,35 @@ hide:
   - toc
 ---
 
-# AgenticAudit
+# Security for AI agents
 
-**The missing audit layer for AI agents.**
+**Know what your AI agents are doing. Prove it to auditors.**
 
-Every action your AI agents take — logged, classified, and audit-ready. From Claude Code to Cowork.
+Your AI agents access customer data, modify production systems, and make autonomous decisions — with zero paper trail. The EU AI Act is in force. Regulators are asking. AgenticAudit is the answer.
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch:{ .lg .middle } __Get started in 5 minutes__
+-   :material-rocket-launch:{ .lg .middle } __Up and running in 5 minutes__
 
     ---
 
-    Start AgenticAudit with Docker Compose, log your first event, and see it classified.
+    One `docker compose up`, log your first event, see it classified and mapped to compliance frameworks.
 
     [:octicons-arrow-right-24: Quickstart](getting-started/quickstart.md)
 
--   :material-connection:{ .lg .middle } __Integrate with your agents__
+-   :material-connection:{ .lg .middle } __Works with your agents__
 
     ---
 
-    Claude Code hooks, Cowork plugin, LangChain callback, REST API — pick your path.
+    Claude Code, LangChain, Codex, Cowork — or any agent via the Python SDK and REST API.
 
     [:octicons-arrow-right-24: Integrations](integrations/claude-code.md)
 
--   :material-shield-check:{ .lg .middle } __Understand the concepts__
+-   :material-shield-check:{ .lg .middle } __Compliance out of the box__
 
     ---
 
-    How PII detection, risk scoring, and compliance framework mapping work.
+    Every action automatically maps to GDPR, EU AI Act, and SOC 2 articles. Generate audit-ready PDF reports.
 
     [:octicons-arrow-right-24: Concepts](concepts/pii-detection.md)
 
@@ -46,9 +46,9 @@ Every action your AI agents take — logged, classified, and audit-ready. From C
 
 </div>
 
-## What it does
+## How it works
 
-Your agent does something → AgenticAudit captures it → classifies risk and detects PII → maps to GDPR, AI Act, and SOC 2 articles. Automatically.
+Your agent does something. AgenticAudit captures it, classifies the risk, detects personal data, and maps it to the compliance articles that matter. Automatically.
 
 ```python
 from agentaudit import AgentAudit

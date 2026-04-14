@@ -5,7 +5,53 @@
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/agentic-audit.svg)](https://pypi.org/project/agentic-audit/)
 
-Open-source API to log, classify and audit every AI agent action for **GDPR / AI Act / SOC2** compliance.
+**Security for AI agents.** Know what they're doing. Prove it to auditors.
+
+## Why
+
+Your AI agents access customer data, modify production systems, and make autonomous decisions — with zero paper trail. The EU AI Act is in force. Your auditor is going to ask what your agents did last Tuesday. You need an answer.
+
+AgenticAudit gives you that answer. Every action your AI agents take gets logged, classified by risk, and mapped to the compliance frameworks you already care about (GDPR, AI Act, SOC 2). Self-hosted, open-source, and working in minutes.
+
+## Quick Start
+
+### Docker Compose
+
+```bash
+docker compose up
+```
+
+The API starts at `http://localhost:8000`. A default API key is printed in the logs on first run.
+Dashboard available at `http://localhost:8000/dashboard`.
+
+### Manual Setup
+
+```bash
+# Install dependencies
+uv sync
+
+# Start Postgres (or use docker compose up db)
+# Run migrations
+cd packages/api
+AGENTAUDIT_DATABASE_URL=postgresql+psycopg2://agentaudit:agentaudit@localhost:5432/agentaudit \
+  uv run alembic -c src/agentaudit_api/alembic.ini upgrade head
+
+# Seed default API key
+uv run python -m agentaudit_api.seed
+
+# Start the API
+uv run uvicorn agentaudit_api.main:app --host 0.0.0.0 --port 8000
+```
+
+## How It Works
+
+1. **Connect your agents** — Claude Code hooks, LangChain callback, Python SDK, or REST API
+2. **Actions get logged automatically** — every tool call, file access, API request
+3. **Risk is classified in real-time** — low / medium / high / critical, with personal data detection
+4. **Compliance mapping happens instantly** — each action maps to GDPR, AI Act, and SOC 2 articles
+5. **Block dangerous actions before they happen** — optional paranoid mode stops high-risk operations
+
+Works with Claude Code, LangChain, Codex, Cowork, or any agent via the REST API.
 
 ## Architecture
 
@@ -50,36 +96,6 @@ Open-source API to log, classify and audit every AI agent action for **GDPR / AI
 │              │  :5432        │                                  │
 │              └───────────────┘                                  │
 └─────────────────────────────────────────────────────────────────┘
-```
-
-## Quick Start
-
-### Docker Compose
-
-```bash
-docker compose up
-```
-
-The API starts at `http://localhost:8000`. A default API key is printed in the logs on first run.
-Dashboard available at `http://localhost:8000/dashboard`.
-
-### Manual Setup
-
-```bash
-# Install dependencies
-uv sync
-
-# Start Postgres (or use docker compose up db)
-# Run migrations
-cd packages/api
-AGENTAUDIT_DATABASE_URL=postgresql+psycopg2://agentaudit:agentaudit@localhost:5432/agentaudit \
-  uv run alembic -c src/agentaudit_api/alembic.ini upgrade head
-
-# Seed default API key
-uv run python -m agentaudit_api.seed
-
-# Start the API
-uv run uvicorn agentaudit_api.main:app --host 0.0.0.0 --port 8000
 ```
 
 ## API Reference
