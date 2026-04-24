@@ -86,11 +86,14 @@ nav:
   - Concepts:
     - PII Detection: concepts/pii-detection.md
     - Risk Scoring: concepts/risk-scoring.md
+    - Risk Classification: concepts/risk-classification.md
     - Framework Mapping: concepts/framework-mapping.md
     - Policy System: concepts/policy-system.md
     - Hooks Architecture: concepts/hooks-architecture.md
   - API Reference:
     - Events: api-reference/events.md
+    - Systems: api-reference/systems.md
+    - Compliance: api-reference/compliance.md
     - Policy: api-reference/policy.md
     - Authentication: api-reference/authentication.md
   - Guides:

@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Classification suggestion engine rewritten** — `GET /v1/systems/{id}/classification-suggestion` now uses a weighted, boundary-aware matcher with explainable evidence:
+    - Signals are read from system metadata (`description`, `use_case`, `vendor`, `name`, `role`) at 3× weight in addition to event payloads.
+    - Keyword phrases are weighted by specificity and matched with word boundaries — `"cv"` no longer matches inside `"cvs"` or `"received"`. Repeated hits are dampened with `sqrt(count)`.
+    - JSON walk skips noisy key subtrees (`*_id`, `*_hash`, `*_at`, `timestamp`, `trace_id`, `user_agent`, ...) so identifiers don't leak into category scores.
+    - Confidence thresholds (3.0 for Annex III, 4.5 for Article 5) prevent a single keyword hit from forcing a classification.
+    - Evidence response now includes `category_matches` and `prohibited_matches` with per-phrase contributions for explainable FRIA records.
+- **Removed misleading heuristics** — Tautological "10% high/critical risk → high" rule (which just mirrored per-event SDK scoring) and the "connector access → limited" shortcut are gone.
+
+### Added
+
+- **Article 5 prohibited-practice detection** — Classifier can now return `suggested_classification: "prohibited"` for: social scoring, emotion recognition in workplace or education, biometric categorization by protected traits, subliminal or manipulative techniques, untargeted biometric scraping, and individual-level predictive policing.
+- **`democratic_processes` category signals** — Previously declared in `ANNEX_III_CATEGORIES` but never detected.
+- **Full Annex III → high mapping** — All eight Annex III categories now drive `suggested_classification: "high"` when detected above threshold (was previously limited to `employment`, `biometric`, `law_enforcement`).
+- **[Risk Classification concept doc](docs/concepts/risk-classification.md)** — Explains the AI Act tiers, Annex III categories, decision hierarchy, and explainability surface.
+
 ## [0.3.0] - 2026-03-24
 
 ### Changed
