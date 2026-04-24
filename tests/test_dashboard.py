@@ -326,9 +326,7 @@ def test_dashboard_shows_events_from_sibling_key_in_same_org(client, api_key_raw
     # Find the org that owns the logged-in key.
     engine = create_engine(db_url)
     with Session(engine) as s:
-        logged_in_key = (
-            s.query(ApiKey).filter(ApiKey.key_hash == hash_api_key(api_key_raw)).first()
-        )
+        logged_in_key = s.query(ApiKey).filter(ApiKey.key_hash == hash_api_key(api_key_raw)).first()
         assert logged_in_key is not None and logged_in_key.org_id is not None
         org_id = logged_in_key.org_id
 
@@ -352,8 +350,7 @@ def test_dashboard_shows_events_from_sibling_key_in_same_org(client, api_key_raw
     resp = client.get("/dashboard")
     assert resp.status_code == 200
     assert "sibling-agent" in resp.text, (
-        "dashboard should show events from all API keys in the org, "
-        "not just the logged-in key"
+        "dashboard should show events from all API keys in the org, not just the logged-in key"
     )
 
 
@@ -404,9 +401,7 @@ def test_dashboard_stats_aggregate_across_org_keys(client, api_key_raw, db_url):
 
     engine = create_engine(db_url)
     with Session(engine) as s:
-        logged_in = (
-            s.query(ApiKey).filter(ApiKey.key_hash == hash_api_key(api_key_raw)).first()
-        )
+        logged_in = s.query(ApiKey).filter(ApiKey.key_hash == hash_api_key(api_key_raw)).first()
         assert logged_in is not None and logged_in.org_id is not None
         org_id = logged_in.org_id
 

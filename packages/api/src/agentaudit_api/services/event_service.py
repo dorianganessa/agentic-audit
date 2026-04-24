@@ -198,9 +198,7 @@ def create_event(
     return result
 
 
-def _scope_filter(
-    session: Session, api_key_id: str | None, org_id: str | None
-) -> Any:
+def _scope_filter(session: Session, api_key_id: str | None, org_id: str | None) -> Any:
     """Tenancy filter for event queries.
 
     Exactly one of api_key_id or org_id must be provided:
@@ -328,30 +326,42 @@ def get_stats(
     base = _with_time(session.query(AuditEvent).filter(scope))
     total_events: int = base.count()
 
-    risk_rows = _with_time(
-        session.query(AuditEvent.risk_level, func.count()).filter(scope)  # type: ignore[call-overload]
-    ).group_by(AuditEvent.risk_level).all()
+    risk_rows = (
+        _with_time(
+            session.query(AuditEvent.risk_level, func.count()).filter(scope)  # type: ignore[call-overload]
+        )
+        .group_by(AuditEvent.risk_level)
+        .all()
+    )
     by_risk_level: dict[str, int] = {level: 0 for level in ("low", "medium", "high", "critical")}
     for level, count in risk_rows:
         if level in by_risk_level:
             by_risk_level[level] = count
 
-    action_rows = _with_time(
-        session.query(AuditEvent.action, func.count()).filter(scope)  # type: ignore[call-overload]
-    ).group_by(AuditEvent.action).all()
+    action_rows = (
+        _with_time(
+            session.query(AuditEvent.action, func.count()).filter(scope)  # type: ignore[call-overload]
+        )
+        .group_by(AuditEvent.action)
+        .all()
+    )
     by_action: dict[str, int] = {act: count for act, count in action_rows}
 
     pii_events: int = base.filter(AuditEvent.pii_detected.is_(True)).count()  # type: ignore[attr-defined]
 
-    unique_agents: int = _with_time(
-        session.query(func.count(func.distinct(AuditEvent.agent_id))).filter(scope)
-    ).scalar() or 0
+    unique_agents: int = (
+        _with_time(
+            session.query(func.count(func.distinct(AuditEvent.agent_id))).filter(scope)
+        ).scalar()
+        or 0
+    )
 
-    unique_sessions: int = _with_time(
-        session.query(
-            func.count(func.distinct(text("context->>'session_id'")))
-        ).filter(scope)
-    ).scalar() or 0
+    unique_sessions: int = (
+        _with_time(
+            session.query(func.count(func.distinct(text("context->>'session_id'")))).filter(scope)
+        ).scalar()
+        or 0
+    )
 
     return {
         "total_events": total_events,
