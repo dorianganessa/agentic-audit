@@ -293,9 +293,7 @@ def test_classification_noisy_keys_ignored(client, api_key_raw):
         ("democratic_processes", "polling station"),
     ],
 )
-def test_classification_every_annex_iii_category_drives_high(
-    client, api_key_raw, category, phrase
-):
+def test_classification_every_annex_iii_category_drives_high(client, api_key_raw, category, phrase):
     """Every Annex III category — not just 3 — must drive suggested=high when detected.
 
     This is a regression guard: the previous classifier hard-coded only 3 categories

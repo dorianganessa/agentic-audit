@@ -261,14 +261,12 @@ _SYSTEM_METADATA_WEIGHT = 3.0
 _EVENT_PAYLOAD_WEIGHT = 1.0
 _PII_RATIO_LIMITED_THRESHOLD = 0.2
 
+
 def _compile_matchers(
     signals: dict[str, dict[str, float]],
 ) -> dict[str, list[tuple[str, float, re.Pattern[str]]]]:
     return {
-        group: [
-            (kw, weight, re.compile(rf"\b{re.escape(kw)}\b"))
-            for kw, weight in kws.items()
-        ]
+        group: [(kw, weight, re.compile(rf"\b{re.escape(kw)}\b")) for kw, weight in kws.items()]
         for group, kws in signals.items()
     }
 
@@ -369,9 +367,7 @@ def _score_group(
     return scores, details
 
 
-def _merge_scores(
-    a: dict[str, float], b: dict[str, float]
-) -> dict[str, float]:
+def _merge_scores(a: dict[str, float], b: dict[str, float]) -> dict[str, float]:
     out: dict[str, float] = dict(a)
     for k, v in b.items():
         out[k] = round(out.get(k, 0.0) + v, 2)
