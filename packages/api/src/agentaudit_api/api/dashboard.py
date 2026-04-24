@@ -34,6 +34,16 @@ COOKIE_NAME = "agentaudit_session"
 COOKIE_MAX_AGE = 86400 * 7  # 7 days
 
 
+def _org_event_scope(session: Session, org_id: str | None) -> Any:
+    """SQL predicate: audit_events belonging to any API key in the given org."""
+    keys_for_org = (
+        session.query(ApiKey.id)  # type: ignore[call-overload]
+        .filter(ApiKey.org_id == org_id)
+        .subquery()
+    )
+    return AuditEvent.api_key_id.in_(keys_for_org.select())  # type: ignore[attr-defined]
+
+
 def _get_authenticated_api_key(
     session: Session,
     agentaudit_session: str | None = Cookie(None),
@@ -190,7 +200,7 @@ def timeline(
 
     events, total = list_events(
         session,
-        api_key.id,
+        org_id=api_key.org_id,
         agent_id=agent_id or None,
         action=action or None,
         risk_level=risk_level or None,
@@ -247,7 +257,7 @@ def event_detail(
     if api_key is None:
         return _login_redirect()
 
-    event = get_event(session, event_id, api_key.id)
+    event = get_event(session, event_id, org_id=api_key.org_id)
     if event is None:
         return HTMLResponse("<h1>Event not found</h1>", status_code=404)
 
@@ -431,12 +441,12 @@ def stats_page(
         return _login_redirect()
 
     after, before = _time_range_to_dates(range)
-    stats = get_stats(session, api_key.id, after=after, before=before)
+    stats = get_stats(session, org_id=api_key.org_id, after=after, before=before)
+
+    org_scope = _org_event_scope(session, api_key.org_id)
 
     # Top agents
-    agents_q = session.query(AuditEvent.agent_id, func.count()).filter(  # type: ignore[call-overload]
-        AuditEvent.api_key_id == api_key.id
-    )
+    agents_q = session.query(AuditEvent.agent_id, func.count()).filter(org_scope)  # type: ignore[call-overload]
     if after:
         agents_q = agents_q.filter(AuditEvent.created_at > after)
     if before:
@@ -445,7 +455,7 @@ def stats_page(
 
     # Top actions by risk (high/critical actions first)
     actions_q = session.query(AuditEvent.action, func.count()).filter(  # type: ignore[call-overload]
-        AuditEvent.api_key_id == api_key.id,
+        org_scope,
         AuditEvent.risk_level.in_(["high", "critical"]),  # type: ignore[union-attr]
     )
     if after:
@@ -479,12 +489,12 @@ def report_pdf(
         return _login_redirect()
 
     after, before = _time_range_to_dates(range)
-    stats = get_stats(session, api_key.id, after=after, before=before)
+    stats = get_stats(session, org_id=api_key.org_id, after=after, before=before)
 
     # Get high/critical events for the report
     high_events, _ = list_events(
         session,
-        api_key.id,
+        org_id=api_key.org_id,
         risk_level=None,
         after=after,
         before=before,
@@ -496,7 +506,7 @@ def report_pdf(
     # Framework coverage
     framework_counts: dict[str, dict[str, int]] = {}
     all_events, _ = list_events(
-        session, api_key.id, after=after, before=before, limit=1000, offset=0
+        session, org_id=api_key.org_id, after=after, before=before, limit=1000, offset=0
     )
     for ev in all_events:
         for fw_name, articles in (ev.frameworks or {}).items():
