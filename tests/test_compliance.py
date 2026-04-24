@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from agentaudit_api.models.api_key import hash_api_key
 
 
@@ -137,6 +138,425 @@ def test_classification_minimal_for_safe_operations(client, api_key_raw):
     body = resp.json()
     assert body["suggested_classification"] == "minimal"
     assert "No high-risk patterns detected" in body["rationale"]
+
+
+def test_classification_reads_system_description(client, api_key_raw):
+    """A description-only system (no events) falls back to minimal — events are
+    required to trigger Annex III, but metadata is still folded into scoring when
+    events exist. This test verifies the metadata corpus is read."""
+    _enable_full_logging(client, api_key_raw)
+
+    # Ambiguous event data that alone wouldn't trigger employment, but the system
+    # description should lift the employment score over threshold.
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="ats-bot",
+            action="file_read",
+            data={"file_path": f"/inbox/{i}.txt"},
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="ATS Assistant",
+        agent_id_patterns=["ats-bot"],
+        description="Screens candidate resumes and ranks applicants for hiring.",
+        use_case="Applicant tracking and recruitment triage.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "high"
+    assert body["suggested_category"] == "employment"
+
+
+def test_classification_prohibited_social_scoring(client, api_key_raw):
+    """System with social scoring signals returns prohibited classification."""
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="score-bot",
+            action="file_read",
+            data={
+                "command": f"compute social score for citizen {i}",
+                "note": "updating trustworthiness score based on behavior score",
+            },
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Citizen Rating",
+        agent_id_patterns=["score-bot"],
+        description="Assigns a social score to individuals.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "prohibited"
+    assert "Article 5" in body["rationale"]
+
+
+def test_classification_democratic_processes(client, api_key_raw):
+    """Democratic-processes signals map to Annex III → high."""
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="vote-bot",
+            action="data_process",
+            data={
+                "command": f"segment voter {i} for campaign targeting",
+                "context_note": "electoral polling station turnout analysis",
+            },
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Campaign Optimizer",
+        agent_id_patterns=["vote-bot"],
+        description="Targets ballot outreach by constituency for an election campaign.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "high"
+    assert body["suggested_category"] == "democratic_processes"
+
+
+def test_classification_noisy_keys_ignored(client, api_key_raw):
+    """Request IDs, hashes, and timestamps shouldn't trigger category matches."""
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(5):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="noise-bot",
+            action="file_read",
+            # 'request_id' contains "salary" but the key is noisy and should be skipped.
+            data={
+                "request_id": f"req-salary-{i}",
+                "trace_id": f"employee-trace-{i}",
+                "user_agent": "candidate-resume-bot/1.0",
+                "file_path": f"/docs/readme_{i}.txt",
+            },
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Noise Bot",
+        agent_id_patterns=["noise-bot"],
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    # Would have been "high" under the old substring matcher. Noisy keys are now skipped.
+    assert body["suggested_classification"] == "minimal"
+
+
+@pytest.mark.parametrize(
+    "category,phrase",
+    [
+        ("biometric", "facial recognition"),
+        ("critical_infrastructure", "scada"),
+        ("education", "gpa"),
+        ("employment", "payroll"),
+        ("essential_services", "credit score"),
+        ("law_enforcement", "recidivism"),
+        ("migration", "asylum"),
+        ("democratic_processes", "polling station"),
+    ],
+)
+def test_classification_every_annex_iii_category_drives_high(
+    client, api_key_raw, category, phrase
+):
+    """Every Annex III category — not just 3 — must drive suggested=high when detected.
+
+    This is a regression guard: the previous classifier hard-coded only 3 categories
+    to escalate to 'high'. All 8 must now apply.
+    """
+    _enable_full_logging(client, api_key_raw)
+    agent_id = f"annex-{category.replace('_', '-')}-bot"
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id=agent_id,
+            action="data_process",
+            data={"note": f"event {i} using {phrase}"},
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name=f"{category} System",
+        agent_id_patterns=[agent_id],
+        description=f"System handling {phrase} workflows.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "high", (
+        f"{category} should escalate to high; got {body}"
+    )
+    assert body["suggested_category"] == category
+
+
+def test_classification_prohibited_overrides_annex_iii(client, api_key_raw):
+    """When prohibited signals AND Annex III signals both fire, prohibited wins.
+
+    Decision hierarchy guard: Article 5 must take precedence over Annex III high-risk.
+    """
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="dual-bot",
+            action="data_process",
+            data={
+                # Employment Annex III signals (would trigger high on their own)
+                "command": f"scoring candidate resume for hiring position {i}",
+                "note": f"payroll applicant {i}",
+                # AND Article 5 prohibited signal (must win)
+                "extra": "assigning social score to each citizen based on social credit",
+            },
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Dual Signal Bot",
+        agent_id_patterns=["dual-bot"],
+        description="HR tool that also assigns a social score to applicants.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "prohibited"
+    assert "Article 5" in body["rationale"]
+
+
+def test_classification_weak_prohibited_does_not_escalate(client, api_key_raw):
+    """A single weak prohibited phrase below the 4.5 threshold must not fire."""
+    _enable_full_logging(client, api_key_raw)
+
+    # "dark pattern" weight 3.5, appears once → score 3.5, below 4.5 threshold.
+    _create_event(
+        client,
+        api_key_raw,
+        agent_id="weak-prh-bot",
+        action="file_read",
+        data={"note": "flagged a dark pattern in the onboarding flow"},
+    )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="UX Review Bot",
+        agent_id_patterns=["weak-prh-bot"],
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] != "prohibited"
+
+
+def test_classification_pii_only_triggers_limited(client, api_key_raw):
+    """No Annex III match but PII ratio ≥ 20% → limited (Art. 50 transparency)."""
+    _enable_full_logging(client, api_key_raw)
+
+    # 5 events with clear PII (emails), no category keywords.
+    for i in range(5):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="pii-bot",
+            action="email_send",
+            data={"body": f"Contact us at user{i}@example.com for info."},
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Notification Bot",
+        agent_id_patterns=["pii-bot"],
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "limited"
+    assert body["evidence"]["pii_ratio"] >= 0.2
+    assert "Art. 50" in body["rationale"]
+
+
+def test_classification_without_description_stays_minimal(client, api_key_raw):
+    """Counterfactual for the metadata-weight test: same ambiguous events without
+    any classification-relevant description must NOT escalate.
+
+    Pairs with test_classification_reads_system_description to prove that the
+    system metadata is what drove the high classification in that case.
+    """
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="ats-plain-bot",
+            action="file_read",
+            data={"file_path": f"/inbox/{i}.txt"},
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Inbox Assistant",
+        agent_id_patterns=["ats-plain-bot"],
+        # No description / use_case — the events alone carry no signal.
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "minimal"
+    assert body["suggested_category"] is None
+
+
+def test_classification_evidence_exposes_explainability_fields(client, api_key_raw):
+    """The evidence response must expose structured per-phrase contributions and
+    thresholds so reviewers (and UIs) can explain the suggestion."""
+    _enable_full_logging(client, api_key_raw)
+
+    for i in range(3):
+        _create_event(
+            client,
+            api_key_raw,
+            agent_id="evidence-bot",
+            action="data_process",
+            data={"command": f"payroll run for employee {i}"},
+        )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Payroll Bot",
+        agent_id_patterns=["evidence-bot"],
+        description="Processes employee payroll.",
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    ev = body["evidence"]
+
+    # Structured evidence fields that feed FRIA and UI explainability.
+    for field in (
+        "category_scores",
+        "category_matches",
+        "category_confidence_threshold",
+        "prohibited_scores",
+        "prohibited_matches",
+        "prohibited_confidence_threshold",
+        "by_risk_level",
+        "by_action",
+        "pii_events",
+        "pii_ratio",
+        "total_events",
+    ):
+        assert field in ev, f"evidence missing field: {field}"
+
+    # The winning category must have a per-phrase breakdown with at least one hit.
+    assert "employment" in ev["category_matches"]
+    assert len(ev["category_matches"]["employment"]) >= 1
+    # Each phrase contribution must be a positive float.
+    for phrase, contribution in ev["category_matches"]["employment"].items():
+        assert isinstance(phrase, str) and phrase
+        assert contribution > 0
+
+    # Thresholds must match the service constants.
+    assert ev["category_confidence_threshold"] == 3.0
+    assert ev["prohibited_confidence_threshold"] == 4.5
+
+
+def test_classification_confidence_floor_blocks_single_hit(client, api_key_raw):
+    """A single low-weight keyword shouldn't win a category."""
+    _enable_full_logging(client, api_key_raw)
+
+    # "cv" has weight 0.8 — one occurrence should not clear the 3.0 threshold.
+    _create_event(
+        client,
+        api_key_raw,
+        agent_id="weak-bot",
+        action="file_read",
+        data={"command": "read cv file"},
+    )
+
+    system = _create_system(
+        client,
+        api_key_raw,
+        name="Weak Signal Bot",
+        agent_id_patterns=["weak-bot"],
+    )
+
+    resp = client.get(
+        f"/v1/systems/{system['id']}/classification-suggestion",
+        headers=_headers(api_key_raw),
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["suggested_classification"] == "minimal"
+    assert body["suggested_category"] is None
 
 
 # --- Compliance Status API ---
