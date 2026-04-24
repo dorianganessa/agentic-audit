@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 import time
 from collections import defaultdict
@@ -29,6 +30,26 @@ DASHBOARD_RATE_LIMIT = 30
 RATE_WINDOW_SECONDS = 60
 
 
+def _is_exempt_ip(ip: str) -> bool:
+    """Loopback and private IPs bypass the rate limiter.
+
+    Covers dev paths where one machine multiplexes many clients through the same
+    socket: localhost curl, the Claude Code hook, the MCP server, and traffic
+    from docker-compose reaching the container via the bridge NAT. All of those
+    land on the same bucket and trip the 100/min cap even during light use.
+
+    In production this is still safe: a real deployment behind a reverse proxy
+    sees the proxy's IP as the client, and if the proxy is co-located (same
+    private subnet) the middleware was already effectively a no-op per-client
+    since all traffic shared the proxy's bucket.
+    """
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return addr.is_loopback or addr.is_private
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Simple in-memory per-IP rate limiter."""
 
@@ -43,6 +64,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return response
 
         client_ip = request.client.host if request.client else "unknown"
+        if _is_exempt_ip(client_ip):
+            passthrough: StarletteResponse = await call_next(request)
+            return passthrough
+
         now = time.monotonic()
         path = request.url.path
 

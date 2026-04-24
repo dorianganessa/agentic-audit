@@ -198,19 +198,50 @@ def create_event(
     return result
 
 
-def get_event(session: Session, event_id: str, api_key_id: str) -> AuditEvent | None:
-    """Get a single event by ID, scoped to the API key.
+def _scope_filter(session: Session, api_key_id: str | None, org_id: str | None) -> Any:
+    """Tenancy filter for event queries.
+
+    Exactly one of api_key_id or org_id must be provided:
+      - api_key_id: SDK / programmatic access — only events posted by this key.
+      - org_id: operator / dashboard access — every event across all API keys
+        that belong to the org.
+    """
+    if (api_key_id is None) == (org_id is None):
+        raise ValueError("Exactly one of api_key_id or org_id must be provided")
+    if api_key_id is not None:
+        return AuditEvent.api_key_id == api_key_id
+
+    from agentaudit_api.models.api_key import ApiKey
+
+    keys_for_org = (
+        session.query(ApiKey.id)  # type: ignore[call-overload]
+        .filter(ApiKey.org_id == org_id)
+        .subquery()
+    )
+    return AuditEvent.api_key_id.in_(keys_for_org.select())  # type: ignore[attr-defined]
+
+
+def get_event(
+    session: Session,
+    event_id: str,
+    api_key_id: str | None = None,
+    *,
+    org_id: str | None = None,
+) -> AuditEvent | None:
+    """Get a single event by ID, scoped to an API key or org.
 
     Args:
         session: Database session.
         event_id: The event ULID.
-        api_key_id: The API key ID for access control.
+        api_key_id: The API key ID for programmatic (SDK) access control.
+        org_id: Alternative org-wide scoping for dashboard/operator access.
+            Exactly one of api_key_id or org_id must be provided.
     """
     return (
         session.query(AuditEvent)
         .filter(
             AuditEvent.id == event_id,  # type: ignore[arg-type]
-            AuditEvent.api_key_id == api_key_id,  # type: ignore[arg-type]
+            _scope_filter(session, api_key_id, org_id),
         )
         .first()
     )
@@ -218,8 +249,9 @@ def get_event(session: Session, event_id: str, api_key_id: str) -> AuditEvent | 
 
 def list_events(
     session: Session,
-    api_key_id: str,
+    api_key_id: str | None = None,
     *,
+    org_id: str | None = None,
     agent_id: str | None = None,
     action: str | None = None,
     risk_level: str | None = None,
@@ -232,10 +264,13 @@ def list_events(
 ) -> tuple[list[AuditEvent], int]:
     """List events with filtering and pagination.
 
+    Pass api_key_id for SDK-style per-key access, or org_id for operator /
+    dashboard-style access that spans every key in the org.
+
     Returns:
         A tuple of (events, total_count).
     """
-    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
+    query = session.query(AuditEvent).filter(_scope_filter(session, api_key_id, org_id))
 
     if agent_id is not None:
         query = query.filter(AuditEvent.agent_id == agent_id)  # type: ignore[arg-type]
@@ -264,67 +299,69 @@ def list_events(
 
 def get_stats(
     session: Session,
-    api_key_id: str,
+    api_key_id: str | None = None,
     *,
+    org_id: str | None = None,
     after: datetime | None = None,
     before: datetime | None = None,
 ) -> dict[str, Any]:
     """Compute aggregate statistics for events.
 
+    Pass api_key_id for SDK-style per-key access, or org_id for operator /
+    dashboard-style access that spans every key in the org.
+
     Returns:
         Dictionary with total_events, by_risk_level, by_action, pii_events,
         unique_agents, and unique_sessions counts.
     """
-    query = session.query(AuditEvent).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
-    if after is not None:
-        query = query.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
-    if before is not None:
-        query = query.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
+    scope = _scope_filter(session, api_key_id, org_id)
 
-    total_events: int = query.count()
+    def _with_time(q: Any) -> Any:
+        if after is not None:
+            q = q.filter(AuditEvent.created_at > after)
+        if before is not None:
+            q = q.filter(AuditEvent.created_at < before)
+        return q
 
-    risk_rows = session.query(AuditEvent.risk_level, func.count()).filter(  # type: ignore[call-overload]
-        AuditEvent.api_key_id == api_key_id
+    base = _with_time(session.query(AuditEvent).filter(scope))
+    total_events: int = base.count()
+
+    risk_rows = (
+        _with_time(
+            session.query(AuditEvent.risk_level, func.count()).filter(scope)  # type: ignore[call-overload]
+        )
+        .group_by(AuditEvent.risk_level)
+        .all()
     )
-    if after is not None:
-        risk_rows = risk_rows.filter(AuditEvent.created_at > after)
-    if before is not None:
-        risk_rows = risk_rows.filter(AuditEvent.created_at < before)
-    risk_rows = risk_rows.group_by(AuditEvent.risk_level).all()
     by_risk_level: dict[str, int] = {level: 0 for level in ("low", "medium", "high", "critical")}
     for level, count in risk_rows:
         if level in by_risk_level:
             by_risk_level[level] = count
 
-    action_rows = session.query(AuditEvent.action, func.count()).filter(  # type: ignore[call-overload]
-        AuditEvent.api_key_id == api_key_id
+    action_rows = (
+        _with_time(
+            session.query(AuditEvent.action, func.count()).filter(scope)  # type: ignore[call-overload]
+        )
+        .group_by(AuditEvent.action)
+        .all()
     )
-    if after is not None:
-        action_rows = action_rows.filter(AuditEvent.created_at > after)
-    if before is not None:
-        action_rows = action_rows.filter(AuditEvent.created_at < before)
-    action_rows = action_rows.group_by(AuditEvent.action).all()
     by_action: dict[str, int] = {act: count for act, count in action_rows}
 
-    pii_events: int = query.filter(AuditEvent.pii_detected.is_(True)).count()  # type: ignore[attr-defined]
+    pii_events: int = base.filter(AuditEvent.pii_detected.is_(True)).count()  # type: ignore[attr-defined]
 
-    unique_agents_q = session.query(func.count(func.distinct(AuditEvent.agent_id))).filter(
-        AuditEvent.api_key_id == api_key_id  # type: ignore[arg-type]
+    unique_agents: int = (
+        _with_time(
+            session.query(func.count(func.distinct(AuditEvent.agent_id))).filter(scope)
+        ).scalar()
+        or 0
     )
-    if after is not None:
-        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
-    if before is not None:
-        unique_agents_q = unique_agents_q.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
-    unique_agents: int = unique_agents_q.scalar() or 0
 
-    unique_sessions_q = session.query(
-        func.count(func.distinct(text("context->>'session_id'")))
-    ).filter(AuditEvent.api_key_id == api_key_id)  # type: ignore[arg-type]
-    if after is not None:
-        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at > after)  # type: ignore[arg-type]
-    if before is not None:
-        unique_sessions_q = unique_sessions_q.filter(AuditEvent.created_at < before)  # type: ignore[arg-type]
-    unique_sessions: int = unique_sessions_q.scalar() or 0
+    unique_sessions: int = (
+        _with_time(
+            session.query(func.count(func.distinct(text("context->>'session_id'")))).filter(scope)
+        ).scalar()
+        or 0
+    )
 
     return {
         "total_events": total_events,
