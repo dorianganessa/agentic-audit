@@ -177,16 +177,36 @@ Get aggregate event statistics for a system based on its `agent_id_patterns`.
 
 ## GET /v1/systems/{system_id}/classification-suggestion
 
-Analyze event patterns and suggest an AI Act risk classification.
+Analyze system metadata and observed events to suggest an AI Act risk classification.
 
 **Authentication:** Bearer token required.
 
-The engine examines:
+### How the classifier works
 
-- **Risk distribution** — If ≥10% of events are high/critical → suggests `high`
-- **PII ratio** — If ≥20% of events contain PII → suggests `limited`
-- **Keyword analysis** — Scans event data/context for Annex III category keywords (e.g., "employee", "resume", "hiring" → `employment`)
-- **Connector access** — External connector usage bumps minimal → limited
+The engine builds a normalized text corpus from two sources and scores it against weighted keyword phrases:
+
+1. **System metadata** (`name`, `description`, `use_case`, `vendor`, `role`) — weighted 3× because it is authoritative.
+2. **Recent event payloads** (`data`, `context`, `action`, `reasoning`, up to 500 events) — weighted 1×. Noisy JSON keys (IDs, timestamps, hashes, user agents) are excluded so identifiers like `req-salary-123` don't leak into the signal.
+
+Matches use word boundaries (so `"cv"` does not match inside `"cvs"` or `"received"`), and repeated hits are dampened with `sqrt(count)` so a single log-spammed field cannot dominate the score.
+
+### Decision hierarchy
+
+The output follows a strict priority order:
+
+1. **Article 5 prohibited practices** — if any of the following signals score ≥ **4.5**, the system is suggested as `prohibited`:
+    - Social scoring (e.g., `"social score"`, `"citizen score"`, `"social credit"`)
+    - Emotion recognition in workplace or education
+    - Biometric categorization by protected traits (race, ethnicity, political opinion, religion, sexual orientation, trade union)
+    - Subliminal or manipulative techniques
+    - Untargeted biometric scraping
+    - Individual-level predictive policing
+2. **Annex III high-risk category** — if the top Annex III category scores ≥ **3.0**, the system is suggested as `high` with that category:
+    - `employment`, `education`, `essential_services`, `law_enforcement`, `biometric`, `critical_infrastructure`, `migration`, `democratic_processes`
+3. **Art. 50 transparency hint** — otherwise, if ≥ 20% of events contain PII, the system is suggested as `limited`.
+4. Else — `minimal`.
+
+If no signal clears its confidence threshold, `suggested_category` is `null` and the rationale says "No high-risk patterns detected in event data". This prevents single accidental keyword hits from forcing a category.
 
 ### Response (200 OK)
 
@@ -194,17 +214,31 @@ The engine examines:
 {
   "suggested_classification": "high",
   "suggested_category": "employment",
-  "rationale": "Data patterns suggest Annex III category: employment; 45/1523 events contain PII (3%)",
+  "rationale": "Annex III category 'employment' detected (score 42.5); 45/1523 events contain PII (3%) — Art. 50 transparency may apply",
   "evidence": {
     "total_events": 1523,
     "by_risk_level": {"low": 1200, "medium": 280, "high": 38, "critical": 5},
     "by_action": {"shell_command": 800, "file_read": 500},
     "pii_events": 45,
     "pii_ratio": 0.03,
-    "category_scores": {"employment": 5, "education": 1}
+    "category_scores": {"employment": 42.5, "education": 2.1},
+    "category_matches": {
+      "employment": {"candidate": 12.5, "resume": 12.5, "hiring": 12.5, "salary": 5.0}
+    },
+    "category_confidence_threshold": 3.0,
+    "prohibited_scores": {},
+    "prohibited_matches": {},
+    "prohibited_confidence_threshold": 4.5
   }
 }
 ```
+
+- `category_scores` — total weighted score per Annex III category
+- `category_matches` — which phrases matched and their contribution to the score (for explainability / FRIA evidence)
+- `prohibited_scores` / `prohibited_matches` — same for Article 5 practices
+- `*_confidence_threshold` — minimum score for that tier to fire
+
+Suggestions are non-binding. A human reviewer should confirm and record the final `risk_classification`, `annex_iii_category`, and `classification_rationale` on the system record.
 
 ---
 

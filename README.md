@@ -120,7 +120,7 @@ Works with Claude Code, LangChain, Codex, Cowork, or any agent via the REST API.
 | `DELETE` | `/v1/systems/{id}` | Deactivate system (soft-delete) |
 | `GET` | `/v1/systems/{id}/events` | Events matching system's agent_id_patterns |
 | `GET` | `/v1/systems/{id}/stats` | Aggregate event stats for system |
-| `GET` | `/v1/systems/{id}/classification-suggestion` | Suggest AI Act risk classification |
+| `GET` | `/v1/systems/{id}/classification-suggestion` | Suggest AI Act risk classification (Annex III + Article 5 prohibited detection, with per-phrase evidence) |
 
 ### Compliance
 
@@ -260,7 +260,7 @@ Configure in Claude Code MCP settings:
 - `check_action_risk` — dry-run risk check before taking an action
 - `list_ai_systems` — list registered AI systems with compliance status
 - `get_compliance_status` — AI Act compliance score and check results
-- `suggest_classification` — suggest risk classification from event patterns
+- `suggest_classification` — suggest risk classification from system metadata + event patterns, with Article 5 prohibited-practice detection and per-phrase evidence
 
 ## LangChain Integration
 

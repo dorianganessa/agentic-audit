@@ -144,7 +144,7 @@ Get the organization's AI Act compliance score and check results.
 
 ### `suggest_classification`
 
-Suggest an AI Act risk classification for a system by analyzing its event patterns.
+Suggest an AI Act risk classification for a system by analyzing its metadata and event patterns. See the [Risk Classification concept](concepts/risk-classification.md) for details on the decision hierarchy (Article 5 prohibited → Annex III high → Art. 50 limited → minimal) and confidence thresholds.
 
 **Parameters:**
 
@@ -158,14 +158,22 @@ Suggest an AI Act risk classification for a system by analyzing its event patter
 {
   "suggested_classification": "high",
   "suggested_category": "employment",
-  "rationale": "Data patterns suggest Annex III category: employment",
+  "rationale": "Annex III category 'employment' detected (score 42.5)",
   "evidence": {
     "total_events": 1523,
     "pii_events": 45,
-    "category_scores": {"employment": 5}
+    "category_scores": {"employment": 42.5},
+    "category_matches": {
+      "employment": {"candidate": 12.5, "resume": 12.5, "hiring": 12.5, "salary": 5.0}
+    },
+    "prohibited_scores": {},
+    "category_confidence_threshold": 3.0,
+    "prohibited_confidence_threshold": 4.5
   }
 }
 ```
+
+`category_matches` lists the exact keyword phrases that contributed to the score — useful for FRIA evidence and for reviewing whether the suggestion is sound before accepting it.
 
 ## Environment Variables
 
